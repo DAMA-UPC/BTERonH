@@ -17,7 +17,7 @@ public class BTERStatsTest {
         int[] expectedGroupBucketSize = {3,4,5};
 
         int[] expectedDegreeNBulk = {0,0,7,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        int[] expectedDegreeNFill = {0,7,0,2,2,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1};
+        int[] expectedDegreeNFill = {0,70,0,2,2,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1};
         int[] expectedDegreeIndex = {0,18,0,7,11,14,14,15,15,15,15,15,15,16,16,16,16,17,17,17,17,17};
 
         BTERStats stats = new BTERStats();
