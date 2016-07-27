@@ -3,18 +3,20 @@ package ldbc.snb.bteronh;
 import javafx.util.Pair;
 import ldbc.snb.bteronh.algorithms.Algorithms;
 import ldbc.snb.bteronh.structures.BTERStats;
-import org.apache.commons.math3.random.EmpiricalDistribution;
+import umontreal.iro.lecuyer.probdist.EmpiricalDist;
+import umontreal.iro.lecuyer.randvar.RandomVariateGen;
+import umontreal.iro.lecuyer.rng.LFSR113;
+import umontreal.iro.lecuyer.rng.RandomStream;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 class BTERMain {
     public static void main(String [] args) {
-        EmpiricalDistribution degreeDistribution = null;
+        EmpiricalDist degreeDistribution = null;
         try {
+            System.out.println("Loading empirical distribution");
 
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(BTERMain.class.getResourceAsStream("/degreeSequences/dblp"), "UTF-8"));
@@ -30,24 +32,28 @@ class BTERMain {
                 degreeSequence[index] = i;
                 index++;
             }
-            degreeDistribution = new EmpiricalDistribution(100);
-            degreeDistribution.load(degreeSequence);
+
+            Arrays.sort(degreeSequence);
+            degreeDistribution = new EmpiricalDist(degreeSequence);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
         }
 
+        System.out.println("Generating Degree Sequence");
+
+        RandomStream random = new LFSR113();
+        RandomVariateGen randomVariateGen = new RandomVariateGen(random,degreeDistribution);
         int maxDegree = Integer.MIN_VALUE;
-        int numNodes = 50;
+        int numNodes = 317080;
         int [] degreeSequence = new int[numNodes];
         for(int i = 0; i < numNodes; ++i) {
-            degreeSequence[i] = (int)degreeDistribution.getNextValue();
+            degreeSequence[i] = (int)randomVariateGen.nextDouble();
             maxDegree = degreeSequence[i] > maxDegree ? degreeSequence[i] : maxDegree;
         }
 
         double [] cc = new double[maxDegree+1];
-
-
+        System.out.println("Loading CC distribution");
         ArrayList<Pair<Long,Double>> ccDistribution = new ArrayList<Pair<Long,Double>>();
         try {
             BufferedReader reader = new BufferedReader(
@@ -81,6 +87,19 @@ class BTERMain {
         }
 
         BTERStats stats = new BTERStats();
+        System.out.println("Initializing BTER stats");
         stats.initialize(degreeSequence,cc);
+
+        try {
+            System.out.println("Generating edges");
+            FileOutputStream fileOutputStream = new FileOutputStream("graph.dat");
+            Algorithms.BTERSample(stats,fileOutputStream);
+            fileOutputStream.close();
+
+        } catch(FileNotFoundException e) {
+            e.printStackTrace();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
     }
 }

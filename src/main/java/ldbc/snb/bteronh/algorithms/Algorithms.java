@@ -1,13 +1,18 @@
 package ldbc.snb.bteronh.algorithms;
 
+import cern.jet.random.Empirical;
 import javafx.util.Pair;
 import ldbc.snb.bteronh.structures.BTERStats;
 import org.apache.commons.math3.random.EmpiricalDistribution;
 import umontreal.iro.lecuyer.probdist.EmpiricalDist;
+import umontreal.iro.lecuyer.randvar.RandomVariateGen;
+import umontreal.iro.lecuyer.rng.LFSR113;
+import umontreal.iro.lecuyer.rng.RandomStream;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -33,68 +38,73 @@ public class Algorithms {
         return max;
     }
 
-    public static EmpiricalDistribution buildDistributionFromFrequencies(double [] input) {
-        double smallestGroupWeight = 0;
-        double totalGroupWeight = 0;
-        for(int i = 0; i < input.length; ++i) {
-            totalGroupWeight += input[i];
-            smallestGroupWeight = input[i] < smallestGroupWeight ? input[i] : smallestGroupWeight;
-        }
-        int factor = Math.max((int)Math.ceil(1/(smallestGroupWeight/totalGroupWeight)), 100000);
-        int amount = 0;
-        for(int i = 0; i < input.length; ++i ) {
-            amount += (int)Math.ceil(factor*input[i]);
-        }
-        double [] data = new double[amount];
-        for(int i = 0; i < input.length; ++i ) {
-            int num = (int) Math.ceil(factor * input[i]);
-            for(int j = 0; j < num; ++i) {
-                data[j] = i;
+    public static int SampleCumulative(double [] cumulative, Random random) {
+        double randomDis = random.nextDouble();
+        int lowerBound = 0;
+        int upperBound = cumulative.length-1;
+        int midPoint = (upperBound + lowerBound) / 2;
+        while (upperBound >= lowerBound) {
+            if (cumulative[midPoint] < randomDis) {
+                lowerBound = midPoint+1;
+            } else if (cumulative[midPoint] > randomDis){
+                upperBound = midPoint-1;
+            } else {
+                return midPoint;
             }
+            midPoint = (upperBound + lowerBound) / 2;
         }
-        EmpiricalDistribution distribution = new EmpiricalDistribution();
-        distribution.load(data);
-        return distribution;
+        return midPoint;
     }
 
     public static void BTERSample(BTERStats stats, OutputStream ostream) throws IOException {
-        EmpiricalDistribution groupDistribution = buildDistributionFromFrequencies(stats.getGroupWeights());
-        EmpiricalDistribution degreeDistribution = buildDistributionFromFrequencies(stats.getDegreeWeights());
         Random random = new Random();
         random.setSeed(System.currentTimeMillis());
-        int numGroups = stats.getNumGroups();
         int weightPhase1 = 0;
         int weightPhase2 = 0;
-        for(int i = 0; i < numGroups; ++i) {
+        for(int i = 0; i < stats.getNumGroups(); ++i) {
             weightPhase1+=stats.getGroupWeight(i);
-            weightPhase2+=stats.getDegreeWBulk(i) + stats.getDegreeWFill(i);
         }
+
+        for(int i = 0; i < (stats.getMaxDegree()+1); ++i) {
+            weightPhase2+=stats.getDegreeWeight(i);
+        }
+
+        double [] cumulativeGroups = new double[stats.getNumGroups()];
+        cumulativeGroups[0] = stats.getGroupWeight(0) / (double)weightPhase1;
+        for(int i = 1; i < stats.getNumGroups(); ++i) {
+            cumulativeGroups[i] = Math.min(cumulativeGroups[i-1] + stats.getGroupWeight(i) / (double)weightPhase1, 1.0);
+        }
+
+        double [] cumulativeDegrees = new double[stats.getMaxDegree()+1];
+        cumulativeGroups[0] = stats.getDegreeWeight(0) / (double)weightPhase2;
+        for(int i = 1; i < (stats.getMaxDegree()+1); ++i) {
+            cumulativeDegrees[i] = Math.min(cumulativeDegrees[i-1] + stats.getDegreeWeight(i) / (double)weightPhase2,1.0);
+        }
+
         int totalWeight = weightPhase1+weightPhase2;
         for(int i = 0; i < totalWeight; ++i) {
             double prob = random.nextDouble();
-            if(prob < weightPhase1/(double)(weightPhase1+weightPhase2)) {
-                BTERSamplePhase1(stats, groupDistribution, ostream);
+            if(prob < weightPhase1/(double)(totalWeight)) {
+                BTERSamplePhase1(stats, cumulativeGroups, ostream,random);
             } else {
-                BTERSamplePhase2(stats,degreeDistribution, ostream);
+                BTERSamplePhase2(stats, cumulativeDegrees, ostream,random);
             }
         }
     }
 
 
-    public static void BTERSamplePhase1(BTERStats stats, EmpiricalDistribution groupDistribution, OutputStream ostream) throws IOException{
-        Random random = new Random();
-        random.setSeed(System.currentTimeMillis());
-        int group = (int)groupDistribution.getNextValue();
+    public static void BTERSamplePhase1(BTERStats stats, double [] cumulativeGroups, OutputStream ostream, Random random) throws IOException{
+        int group = SampleCumulative(cumulativeGroups,random);
         double r1 = random.nextDouble();
-        int offset = stats.getGroupIndex(group) + (int)Math.floor(r1*stats.getGroupBucketSize(group))*stats.getGroupNumBuckets(group);
+        int offset = stats.getGroupIndex(group) + (int)Math.floor(r1*stats.getGroupNumBuckets(group))*stats.getGroupBucketSize(group);
         double r2 = random.nextDouble();
         int firstNode = (int)Math.floor(r2*stats.getGroupBucketSize(group)) + offset;
         double r3 = random.nextDouble();
-        int secondNode = (int)Math.floor(r2*stats.getGroupBucketSize(group)) + offset;
+        int secondNode = (int)Math.floor(r3*(stats.getGroupBucketSize(group)-1)) + offset;
         if( secondNode >= firstNode )  {
             secondNode+=1;
         }
-        String edge = new String(firstNode+" "+secondNode);
+        String edge = new String(firstNode+" "+secondNode+"\n");
         try {
             ostream.write(edge.getBytes());
         }catch(IOException e) {
@@ -102,10 +112,10 @@ public class Algorithms {
         }
     }
 
-    public static void BTERSamplePhase2(BTERStats stats, EmpiricalDistribution degreeDistribution, OutputStream ostream) throws IOException {
-        int firstNode = BTERSampleNodePhase2(stats,degreeDistribution,ostream);
-        int secondNode = BTERSampleNodePhase2(stats,degreeDistribution,ostream);
-        String edge = new String(firstNode+" "+secondNode);
+    public static void BTERSamplePhase2(BTERStats stats, double [] cumulativeDegrees, OutputStream ostream, Random random) throws IOException {
+        int firstNode = BTERSampleNodePhase2(stats,cumulativeDegrees,ostream, random);
+        int secondNode = BTERSampleNodePhase2(stats,cumulativeDegrees,ostream, random);
+        String edge = new String(firstNode+" "+secondNode+"\n");
         try {
             ostream.write(edge.getBytes());
         }catch(IOException e) {
@@ -113,10 +123,8 @@ public class Algorithms {
         }
     }
 
-    public static int BTERSampleNodePhase2(BTERStats stats, EmpiricalDistribution degreeDistribution, OutputStream ostream) {
-        Random random = new Random();
-        random.setSeed(System.currentTimeMillis());
-        int degree = (int)degreeDistribution.getNextValue();
+    public static int BTERSampleNodePhase2(BTERStats stats, double [] cumulativeDegrees, OutputStream ostream, Random random) {
+        int degree = SampleCumulative(cumulativeDegrees,random)+1;
         double r1 = random.nextDouble();
         double r2 = random.nextDouble();
         if(r1 < stats.getDegreeWeightRatio(degree)) {

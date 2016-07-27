@@ -25,7 +25,6 @@ public class BTERStats {
     int [] i_d = null;
     int [] n_d = null;
 
-
     public void initialize(int [] degreeSequence, double [] ccPerDegree) {
 
         maxDegree = Integer.MIN_VALUE;
@@ -82,9 +81,11 @@ public class BTERStats {
         }
 
         //handling degree 1 nodes
-        nfill_d[1] = n_d[1];
+        nfill_d[1] = 10*n_d[1];
         wfill_d[1] = 0.5*n_d[1];
         wbulk_d[1] = 0;
+        w_d[1] = wbulk_d[1] + wfill_d[1];
+        r_d[1] = 1;
 
         // Initializing group arrays.
         int nFillPrevious = 0;
@@ -93,8 +94,8 @@ public class BTERStats {
         for(int i = 2; i <= maxDegree; ++i) {
             if(nFillPrevious > 0) {
                 nfill_d[i] = Math.min(nFillPrevious, n_d[i]);
-                nFillPrevious-=n_d[i];
-                wfill_d[i] = 0.5*n_d[i]*(i-dInternalPrevious);
+                nFillPrevious-=nfill_d[i];
+                wfill_d[i] = 0.5*nfill_d[i]*(i-dInternalPrevious);
             } else {
                 nfill_d[i] = 0;
                 wfill_d[i] = 0;
@@ -111,14 +112,31 @@ public class BTERStats {
                 double p = Math.pow(ccPerDegree[i],1/3.0);
                 dInternalPrevious = (n_g[g]-1)*p;
                 wbulk_d[i] = 0.5*nbulk_d[i]*(i-dInternalPrevious);
-                w_g[g] = b_g[g]*0.5*n_g[g]*(n_g[g]-1)*Math.log(1/(1-p));
+                w_g[g] = b_g[g]*0.5*n_g[g]*(n_g[g]-1)*Math.log(1/(1.0-p));
                 nFillPrevious = (b_g[g]*n_g[g]) - nbulk_d[i];
             } else {
                 wbulk_d[i] = 0;
             }
             w_d[i] = wfill_d[i] + wbulk_d[i];
-            r_d[i] = wfill_d[i] / wbulk_d[i];
+            r_d[i] = wfill_d[i] / w_d[i];
         }
+
+        int [] newi_g = new int[g+1];
+        int [] newn_g = new int[g+1]; //number of buckets in group
+        int [] newb_g = new int[g+1]; //size of bucket in group
+        double [] neww_g = new double[g+1]; //weight of buckets in group
+        for(int i = 0; i < g+1; ++i) {
+            newi_g[i] = i_g[i];
+            newn_g[i] = n_g[i];
+            newb_g[i] = b_g[i];
+            neww_g[i] = w_g[i];
+        }
+
+        i_g = newi_g;
+        n_g = newn_g;
+        b_g = newb_g;
+        w_g = neww_g;
+
     }
 
     public int getGroupIndex(int group) {return i_g[group];}
@@ -129,8 +147,7 @@ public class BTERStats {
 
     public double getGroupWeight(int group) {return w_g[group];}
 
-    public double [] getGroupWeights() { return w_d;}
-
+    public double [] getGroupWeights() { return w_g;}
 
     public int getDegreeIndex(int degree) { return i_d[degree];}
 
@@ -140,7 +157,7 @@ public class BTERStats {
 
     public double getDegreeWFill(int degree) { return wfill_d[degree];}
 
-    public double getDegreeWBulk(int degree) { return wfill_d[degree];}
+    public double getDegreeWBulk(int degree) { return wbulk_d[degree];}
 
     public double getDegreeWeight(int degree) { return w_d[degree];}
 
