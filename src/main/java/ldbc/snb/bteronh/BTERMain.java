@@ -19,7 +19,7 @@ class BTERMain {
             System.out.println("Loading empirical distribution");
 
             BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(BTERMain.class.getResourceAsStream("/degreeSequences/dblp"), "UTF-8"));
+                    new InputStreamReader(BTERMain.class.getResourceAsStream("/degreeSequences/"+args[1]), "UTF-8"));
             String line;
             ArrayList<Integer> fileData = new ArrayList<Integer>();
             while ((line = reader.readLine()) != null) {
@@ -45,7 +45,7 @@ class BTERMain {
         RandomStream random = new LFSR113();
         RandomVariateGen randomVariateGen = new RandomVariateGen(random,degreeDistribution);
         int maxDegree = Integer.MIN_VALUE;
-        int numNodes = 317080;
+        int numNodes = Integer.parseInt(args[2]);
         int [] degreeSequence = new int[numNodes];
         for(int i = 0; i < numNodes; ++i) {
             degreeSequence[i] = (int)randomVariateGen.nextDouble();
@@ -57,7 +57,7 @@ class BTERMain {
         ArrayList<Pair<Long,Double>> ccDistribution = new ArrayList<Pair<Long,Double>>();
         try {
             BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(BTERMain.class.getResourceAsStream("/CCs/dblp"), "UTF-8"));
+                    new InputStreamReader(BTERMain.class.getResourceAsStream("/CCs/"+args[1]), "UTF-8"));
             String line;
             while ((line = reader.readLine()) != null) {
                 String data[] = line.split(" ");
