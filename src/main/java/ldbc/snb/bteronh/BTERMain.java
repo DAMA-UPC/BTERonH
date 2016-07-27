@@ -16,10 +16,11 @@ class BTERMain {
     public static void main(String [] args) {
         EmpiricalDist degreeDistribution = null;
         try {
-            System.out.println("Loading empirical distribution");
+            String graphPath = "/degreeSequences/"+args[1];
+            System.out.println("Loading empirical distribution from "+graphPath);
 
             BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(BTERMain.class.getResourceAsStream("/degreeSequences/"+args[1]), "UTF-8"));
+                    new InputStreamReader(BTERMain.class.getResourceAsStream(graphPath), "UTF-8"));
             String line;
             ArrayList<Integer> fileData = new ArrayList<Integer>();
             while ((line = reader.readLine()) != null) {
