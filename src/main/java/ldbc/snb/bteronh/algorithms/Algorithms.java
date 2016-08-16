@@ -3,13 +3,16 @@ package ldbc.snb.bteronh.algorithms;
 import cern.jet.random.Empirical;
 import javafx.util.Pair;
 import ldbc.snb.bteronh.structures.BTERStats;
+import ldbc.snb.bteronh.types.Edge;
 import org.apache.commons.math3.random.EmpiricalDistribution;
 import umontreal.iro.lecuyer.probdist.EmpiricalDist;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 import umontreal.iro.lecuyer.rng.LFSR113;
 import umontreal.iro.lecuyer.rng.RandomStream;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +41,93 @@ public class Algorithms {
         return max;
     }
 
+    public static int [] GenerateDegreeSequence( String empiricalDegreeSequenceFile, int numNodes, int seed ) {
+
+        EmpiricalDist degreeDistribution = null;
+        try {
+
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(Algorithms.class.getResourceAsStream(empiricalDegreeSequenceFile), "UTF-8"));
+            String line;
+            ArrayList<Integer> fileData = new ArrayList<Integer>();
+            while ((line = reader.readLine()) != null) {
+                fileData.add(Integer.parseInt(line));
+            }
+            reader.close();
+            double [] degreeSequence = new double[fileData.size()];
+            int index = 0;
+            for(Integer i : fileData) {
+                degreeSequence[index] = i;
+                index++;
+            }
+
+            Arrays.sort(degreeSequence);
+            degreeDistribution = new EmpiricalDist(degreeSequence);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        System.out.println("Generating Degree Sequence");
+
+        LFSR113 random = new LFSR113();
+        int [] seeds = new int[4];
+        seeds[0] = 128+seed;
+        seeds[1] = 128+seed;
+        seeds[2] = 128+seed;
+        seeds[3] = 128+seed;
+        //LFSR113.setPackageSeed(seeds);
+        random.setSeed(seeds);
+        RandomVariateGen randomVariateGen = new RandomVariateGen(random,degreeDistribution);
+        int maxDegree = Integer.MIN_VALUE;
+        int [] degreeSequence = new int[numNodes];
+        for(int i = 0; i < numNodes; ++i) {
+            degreeSequence[i] = (int)randomVariateGen.nextDouble();
+            maxDegree = degreeSequence[i] > maxDegree ? degreeSequence[i] : maxDegree;
+        }
+        return degreeSequence;
+    }
+
+    public static double [] GenerateCCperDegree( String empiricalCCperDegreeFile, int maxDegree) {
+
+        double [] cc = new double[maxDegree+1];
+        System.out.println("Loading CC distribution");
+        ArrayList<Pair<Long,Double>> ccDistribution = new ArrayList<Pair<Long,Double>>();
+        try {
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(Algorithms.class.getResourceAsStream(empiricalCCperDegreeFile), "UTF-8"));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String data[] = line.split(" ");
+                ccDistribution.add(new Pair<Long, Double>(Long.parseLong(data[0]), Double.parseDouble(data[1])));
+            }
+            reader.close();
+        } catch( IOException e) {
+            e.printStackTrace();
+        }
+
+        cc[0] = 0.0;
+        cc[1] = 0.0;
+        for(int i = 2; i < maxDegree+1; ++i) {
+            int degree = i;
+            int pos = Algorithms.BinarySearch(ccDistribution,(long)degree);
+            if(ccDistribution.get(pos).getKey() == degree || pos == (ccDistribution.size() - 1)) {
+                cc[degree] = ccDistribution.get(pos).getValue();
+            } else if( pos < ccDistribution.size() - 1 ){
+                long min = ccDistribution.get(pos).getKey();
+                long max = ccDistribution.get(pos+1).getKey();
+                double ratio = (degree - min) / (max - min);
+                double minCC = ccDistribution.get(pos).getValue();
+                double maxCC = ccDistribution.get(pos+1).getValue();
+                double cc_current = ratio * (maxCC - minCC ) + minCC;
+                cc[degree] = cc_current;
+            }
+        }
+        return cc;
+    }
+
+
+
     public static int SampleCumulative(double [] cumulative, Random random) {
         double randomDis = random.nextDouble();
         int lowerBound = 0;
@@ -56,45 +146,19 @@ public class Algorithms {
         return midPoint;
     }
 
-    public static void BTERSample(BTERStats stats, OutputStream ostream) throws IOException {
-        Random random = new Random();
-        random.setSeed(System.currentTimeMillis());
-        int weightPhase1 = 0;
-        int weightPhase2 = 0;
-        for(int i = 0; i < stats.getNumGroups(); ++i) {
-            weightPhase1+=stats.getGroupWeight(i);
-        }
+    public static Edge BTERSample(BTERStats stats, Random random) throws IOException {
 
-        for(int i = 0; i < (stats.getMaxDegree()+1); ++i) {
-            weightPhase2+=stats.getDegreeWeight(i);
+        int totalWeight = stats.getWeightPhase1()+stats.getWeightPhase2();
+        double prob = random.nextDouble();
+        if(prob < stats.getWeightPhase1()/(double)(totalWeight)) {
+            return BTERSamplePhase1(stats,random);
         }
-
-        double [] cumulativeGroups = new double[stats.getNumGroups()];
-        cumulativeGroups[0] = stats.getGroupWeight(0) / (double)weightPhase1;
-        for(int i = 1; i < stats.getNumGroups(); ++i) {
-            cumulativeGroups[i] = Math.min(cumulativeGroups[i-1] + stats.getGroupWeight(i) / (double)weightPhase1, 1.0);
-        }
-
-        double [] cumulativeDegrees = new double[stats.getMaxDegree()+1];
-        cumulativeGroups[0] = stats.getDegreeWeight(0) / (double)weightPhase2;
-        for(int i = 1; i < (stats.getMaxDegree()+1); ++i) {
-            cumulativeDegrees[i] = Math.min(cumulativeDegrees[i-1] + stats.getDegreeWeight(i) / (double)weightPhase2,1.0);
-        }
-
-        int totalWeight = weightPhase1+weightPhase2;
-        for(int i = 0; i < totalWeight; ++i) {
-            double prob = random.nextDouble();
-            if(prob < weightPhase1/(double)(totalWeight)) {
-                BTERSamplePhase1(stats, cumulativeGroups, ostream,random);
-            } else {
-                BTERSamplePhase2(stats, cumulativeDegrees, ostream,random);
-            }
-        }
+        return BTERSamplePhase2(stats,random);
     }
 
 
-    public static void BTERSamplePhase1(BTERStats stats, double [] cumulativeGroups, OutputStream ostream, Random random) throws IOException{
-        int group = SampleCumulative(cumulativeGroups,random);
+    public static Edge BTERSamplePhase1(BTERStats stats, Random random) throws IOException{
+        int group = SampleCumulative(stats.getCumulativeGroups(),random);
         double r1 = random.nextDouble();
         int offset = stats.getGroupIndex(group) + (int)Math.floor(r1*stats.getGroupNumBuckets(group))*stats.getGroupBucketSize(group);
         double r2 = random.nextDouble();
@@ -104,27 +168,17 @@ public class Algorithms {
         if( secondNode >= firstNode )  {
             secondNode+=1;
         }
-        String edge = new String(firstNode+" "+secondNode+"\n");
-        try {
-            ostream.write(edge.getBytes());
-        }catch(IOException e) {
-            throw e;
-        }
+        return new Edge(firstNode,secondNode);
     }
 
-    public static void BTERSamplePhase2(BTERStats stats, double [] cumulativeDegrees, OutputStream ostream, Random random) throws IOException {
-        int firstNode = BTERSampleNodePhase2(stats,cumulativeDegrees,ostream, random);
-        int secondNode = BTERSampleNodePhase2(stats,cumulativeDegrees,ostream, random);
-        String edge = new String(firstNode+" "+secondNode+"\n");
-        try {
-            ostream.write(edge.getBytes());
-        }catch(IOException e) {
-            throw e;
-        }
+    public static Edge BTERSamplePhase2(BTERStats stats, Random random) throws IOException {
+        int firstNode = BTERSampleNodePhase2(stats, random);
+        int secondNode = BTERSampleNodePhase2(stats, random);
+        return new Edge(firstNode, secondNode);
     }
 
-    public static int BTERSampleNodePhase2(BTERStats stats, double [] cumulativeDegrees, OutputStream ostream, Random random) {
-        int degree = SampleCumulative(cumulativeDegrees,random)+1;
+    public static int BTERSampleNodePhase2(BTERStats stats, Random random) {
+        int degree = SampleCumulative(stats.getCumulativeDegrees(),random)+1;
         double r1 = random.nextDouble();
         double r2 = random.nextDouble();
         if(r1 < stats.getDegreeWeightRatio(degree)) {

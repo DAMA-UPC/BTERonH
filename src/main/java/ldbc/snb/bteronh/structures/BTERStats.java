@@ -25,6 +25,12 @@ public class BTERStats {
     int [] i_d = null;
     int [] n_d = null;
 
+
+    double [] cumulativeGroups = null;
+    double [] cumulativeDegrees = null;
+    int weightPhase1;
+    int weightPhase2;
+
     public void initialize(int [] degreeSequence, double [] ccPerDegree) {
 
         maxDegree = Integer.MIN_VALUE;
@@ -137,6 +143,27 @@ public class BTERStats {
         b_g = newb_g;
         w_g = neww_g;
 
+        weightPhase1 = 0;
+        weightPhase2 = 0;
+        for(int i = 0; i < getNumGroups(); ++i) {
+            weightPhase1+= getGroupWeight(i);
+        }
+
+        for(int i = 0; i < (getMaxDegree()+1); ++i) {
+            weightPhase2+=getDegreeWeight(i);
+        }
+
+        cumulativeGroups = new double[getNumGroups()];
+        cumulativeGroups[0] = getGroupWeight(0) / (double)weightPhase1;
+        for(int i = 1; i < getNumGroups(); ++i) {
+            cumulativeGroups[i] = Math.min(cumulativeGroups[i-1] + getGroupWeight(i) / (double)weightPhase1, 1.0);
+        }
+
+        cumulativeDegrees = new double[getMaxDegree()+1];
+        cumulativeGroups[0] = getDegreeWeight(0) / (double)weightPhase2;
+        for(int i = 1; i < (getMaxDegree()+1); ++i) {
+            cumulativeDegrees[i] = Math.min(cumulativeDegrees[i-1] + getDegreeWeight(i) / (double)weightPhase2,1.0);
+        }
     }
 
     public int getGroupIndex(int group) {return i_g[group];}
@@ -174,5 +201,21 @@ public class BTERStats {
     }
 
     public int getMaxDegree() { return maxDegree;}
+
+    public double[] getCumulativeGroups() {
+        return cumulativeGroups;
+    }
+
+    public double[] getCumulativeDegrees() {
+        return cumulativeDegrees;
+    }
+
+    public int getWeightPhase1() {
+        return weightPhase1;
+    }
+
+    public int getWeightPhase2() {
+        return weightPhase2;
+    }
 
 }
