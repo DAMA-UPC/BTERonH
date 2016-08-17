@@ -1,19 +1,15 @@
 package ldbc.snb.bteronh.algorithms;
 
-import cern.jet.random.Empirical;
 import javafx.util.Pair;
 import ldbc.snb.bteronh.structures.BTERStats;
-import ldbc.snb.bteronh.types.Edge;
-import org.apache.commons.math3.random.EmpiricalDistribution;
+import ldbc.snb.bteronh.structures.Edge;
 import umontreal.iro.lecuyer.probdist.EmpiricalDist;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 import umontreal.iro.lecuyer.rng.LFSR113;
-import umontreal.iro.lecuyer.rng.RandomStream;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;

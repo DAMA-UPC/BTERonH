@@ -1,6 +1,8 @@
 package ldbc.snb.bteronh;
 
+import com.beust.jcommander.JCommander;
 import ldbc.snb.bteronh.hadoop.HadoopBTERGenerator;
+import ldbc.snb.bteronh.structures.Arguments;
 import org.apache.hadoop.conf.Configuration;
 
 class BTERMain {
@@ -10,12 +12,21 @@ class BTERMain {
 
         System.out.println("Generating edges");
         Configuration conf = new Configuration();
-        conf.setInt("ldbc.snb.bteronh.generator.numThreads",2);
-        conf.setInt("ldbc.snb.bteronh.generator.numNodes",317080);
+        conf.setInt("ldbc.snb.bteronh.generator.numThreads",1);
+        conf.setInt("ldbc.snb.bteronh.generator.numNodes",10000);
         conf.set("ldbc.snb.bteronh.generator.graph","dblp");
         conf.setInt("ldbc.snb.bteronh.generator.seed",12323540);
-        conf.set("ldbc.snb.bteronh.serializer.hadoopDir","./hadoop");
-        conf.set("ldbc.snb.bteronh.serializer.outputDir","./data");
+        conf.set("ldbc.snb.bteronh.serializer.outputDir","./");
+        conf.set("ldbc.snb.bteronh.serializer.dataDir",conf.get("ldbc.snb.bteronh.serializer.outputDir")+"/data");
+        conf.set("ldbc.snb.bteronh.serializer.hadoopDir",conf.get("ldbc.snb.bteronh.serializer.outputDir")+"/hadoop");
+
+
+        Arguments arguments = new Arguments();
+        new JCommander(arguments,args);
+        for(Arguments.Property p : arguments.getProperties()) {
+            conf.set(p.getProperty(),p.getValue());
+        }
+
         HadoopBTERGenerator bterGenerator = new HadoopBTERGenerator(conf);
         try {
             bterGenerator.run();

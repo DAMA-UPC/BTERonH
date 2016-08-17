@@ -2,7 +2,7 @@ package ldbc.snb.bteronh.hadoop;
 
 import ldbc.snb.bteronh.algorithms.Algorithms;
 import ldbc.snb.bteronh.structures.BTERStats;
-import ldbc.snb.bteronh.types.Edge;
+import ldbc.snb.bteronh.structures.Edge;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -21,7 +21,6 @@ import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * Created by aprat on 16/08/16.
@@ -39,7 +38,6 @@ public class HadoopBTERGenerator {
             int numThreads = conf.getInt("ldbc.snb.bteronh.generator.numThreads",1);
             int numNodes = conf.getInt("ldbc.snb.bteronh.generator.numNodes",10000);
             String graph = conf.get("ldbc.snb.bteronh.generator.graph");
-            int taskId = context.getTaskAttemptID().getTaskID().getId();
 
             int [] degreeSequence = Algorithms.GenerateDegreeSequence("/degreeSequences/"+graph, numNodes, seed);
 
@@ -59,9 +57,9 @@ public class HadoopBTERGenerator {
                 blockSize += residual;
             }
 
-            System.out.println("Generating "+blockSize+" edges out of "+totalWeight);
+            System.out.println("Mapper "+threadId+": Generating "+blockSize+" edges out of "+totalWeight);
             Random random = new Random();
-            random.setSeed(seed+taskId);
+            random.setSeed(seed+threadId);
             for(int i = 0; i < blockSize; ++i) {
                 Edge edge = Algorithms.BTERSample(stats,random);
                 context.write(new LongWritable(edge.getTail()), new LongWritable(edge.getHead()));
@@ -78,11 +76,11 @@ public class HadoopBTERGenerator {
         public void setup(Context context) {
             try {
                 Configuration conf = context.getConfiguration();
-                String outputDir = conf.get("ldbc.snb.bteronh.serializer.outputDir");
+                String dataDir = conf.get("ldbc.snb.bteronh.serializer.dataDir");
                 int reducerId = context.getTaskAttemptID().getTaskID().getId();
 
                 FileSystem fs = FileSystem.get(conf);
-                outputStream = fs.create(new Path(outputDir + "/edges_"+ reducerId), true, 131072);
+                outputStream = fs.create(new Path(dataDir + "/edges_"+ reducerId), true, 131072);
             } catch (IOException e) {
                 System.err.println(e.getMessage());
                 System.exit(-1);
@@ -130,13 +128,11 @@ public class HadoopBTERGenerator {
     public void run() throws Exception {
 
         String hadoopDir = new String( conf.get("ldbc.snb.bteronh.serializer.hadoopDir"));
-        String outputDir = new String( conf.get("ldbc.snb.bteronh.serializer.outputDir"));
         String tempFile = hadoopDir+"/mrInputFile";
 
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(tempFile), true);
         writeToOutputFile(tempFile, Integer.parseInt(conf.get("ldbc.snb.bteronh.generator.numThreads")), conf);
-        dfs.delete(new Path(outputDir), true);
 
         int numThreads = Integer.parseInt(conf.get("ldbc.snb.bteronh.generator.numThreads"));
         conf.setInt("mapreduce.input.lineinputformat.linespermap", 1);

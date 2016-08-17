@@ -1,4 +1,4 @@
-package ldbc.snb.bteronh.types;
+package ldbc.snb.bteronh.structures;
 
 import org.apache.hadoop.io.WritableComparable;
 
