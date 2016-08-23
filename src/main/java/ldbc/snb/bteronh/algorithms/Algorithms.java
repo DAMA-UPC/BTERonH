@@ -8,6 +8,7 @@ import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 import umontreal.iro.lecuyer.rng.LFSR113;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -42,8 +43,7 @@ public class Algorithms {
         EmpiricalDist degreeDistribution = null;
         try {
 
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(Algorithms.class.getResourceAsStream(empiricalDegreeSequenceFile), "UTF-8"));
+            BufferedReader reader = new BufferedReader(new FileReader(empiricalDegreeSequenceFile));
             String line;
             ArrayList<Integer> fileData = new ArrayList<Integer>();
             while ((line = reader.readLine()) != null) {
@@ -90,8 +90,7 @@ public class Algorithms {
         System.out.println("Loading CC distribution");
         ArrayList<Pair<Long,Double>> ccDistribution = new ArrayList<Pair<Long,Double>>();
         try {
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(Algorithms.class.getResourceAsStream(empiricalCCperDegreeFile), "UTF-8"));
+            BufferedReader reader = new BufferedReader(new FileReader(empiricalCCperDegreeFile));
             String line;
             while ((line = reader.readLine()) != null) {
                 String data[] = line.split(" ");

@@ -37,15 +37,18 @@ public class HadoopBTERGenerator {
             int seed = conf.getInt("ldbc.snb.bteronh.generator.seed",0);
             int numThreads = conf.getInt("ldbc.snb.bteronh.generator.numThreads",1);
             int numNodes = conf.getInt("ldbc.snb.bteronh.generator.numNodes",10000);
-            String graph = conf.get("ldbc.snb.bteronh.generator.graph");
+            String hadoopDir = new String( conf.get("ldbc.snb.bteronh.serializer.hadoopDir"));
+            String degreeSequenceFile = hadoopDir+"/degreeSequence";
+            String ccPerDegreeFile = hadoopDir+"/ccs";
 
-            int [] degreeSequence = Algorithms.GenerateDegreeSequence("/degreeSequences/"+graph, numNodes, seed);
+            int [] degreeSequence = Algorithms.GenerateDegreeSequence(degreeSequenceFile, numNodes, seed);
 
             int maxDegree = Integer.MIN_VALUE;
             for(int i = 0; i < degreeSequence.length; ++i) {
                 maxDegree = degreeSequence[i] > maxDegree ? degreeSequence[i] : maxDegree;
             }
-            double [] cc = Algorithms.GenerateCCperDegree("/CCs/"+graph,maxDegree);
+
+            double [] cc = Algorithms.GenerateCCperDegree(ccPerDegreeFile,maxDegree);
 
             BTERStats stats = new BTERStats();
             stats.initialize(degreeSequence,cc);
@@ -125,6 +128,7 @@ public class HadoopBTERGenerator {
             e.printStackTrace();
         }
     }
+
     public void run() throws Exception {
 
         String hadoopDir = new String( conf.get("ldbc.snb.bteronh.serializer.hadoopDir"));
@@ -133,6 +137,12 @@ public class HadoopBTERGenerator {
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(tempFile), true);
         writeToOutputFile(tempFile, Integer.parseInt(conf.get("ldbc.snb.bteronh.generator.numThreads")), conf);
+
+        dfs.copyFromLocalFile(new Path(conf.get("ldbc.snb.bteronh.generator.degreeSequence")),
+                new Path(hadoopDir+"/degreeSequence"));
+
+        dfs.copyFromLocalFile(new Path(conf.get("ldbc.snb.bteronh.generator.ccPerDegree")),
+                new Path(hadoopDir+"/ccs"));
 
         int numThreads = Integer.parseInt(conf.get("ldbc.snb.bteronh.generator.numThreads"));
         conf.setInt("mapreduce.input.lineinputformat.linespermap", 1);
