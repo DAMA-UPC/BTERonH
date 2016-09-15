@@ -87,6 +87,9 @@ public class HadoopBTERGenerator {
             for(int i = 0; i < blockSize; ++i) {
                 Edge edge = Algorithms.BTERSample(stats,random);
                 context.write(new LongWritable(edge.getTail()), new LongWritable(edge.getHead()));
+                if( i % 100000 == 0 ) {
+                    context.setStatus("Generated "+i+" edges out of "+blockSize+" in mapper "+threadId);
+                }
             }
         }
     }

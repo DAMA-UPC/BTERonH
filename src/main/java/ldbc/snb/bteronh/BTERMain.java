@@ -9,13 +9,10 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Properties;
 
 public class BTERMain {
     public static void main(String [] args) {
-
-
 
         System.out.println("Generating edges");
         Configuration conf = new Configuration();
