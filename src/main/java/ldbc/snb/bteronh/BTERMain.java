@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Properties;
 
-class BTERMain {
+public class BTERMain {
     public static void main(String [] args) {
 
 
