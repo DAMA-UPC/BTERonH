@@ -43,7 +43,15 @@ public class Arguments {
     @Parameter(names = "-p", description = "Property", converter=PropertyConverter.class)
     private List<Property> properties = new ArrayList<Property>();
 
+    @Parameter(names = "-P", description = "Property file")
+    private List<String> propertyFiles = new ArrayList<String>();
+
+
     public List<Property> getProperties() {
         return properties;
+    }
+
+    public List<String> getPropertyFiles() {
+        return propertyFiles;
     }
 }
