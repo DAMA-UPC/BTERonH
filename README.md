@@ -19,7 +19,7 @@ For pseudo-/distributed hadoop:
 ```
 hadoop jar target/bteronh-0.0.1-jar-with-dependencies.jar -P params.ini
 ```
-These commands produce 2 files edge\_0 and edges\_1 in folder ./data/data
+These commands produce a file edge\_0 in folder ./data/data
 
 ## Configuration
 

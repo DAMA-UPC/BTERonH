@@ -1,5 +1,6 @@
 package ldbc.snb.bteronh.hadoop;
 
+import javafx.util.Pair;
 import ldbc.snb.bteronh.algorithms.Algorithms;
 import ldbc.snb.bteronh.structures.BTERStats;
 import ldbc.snb.bteronh.structures.Edge;
@@ -16,8 +17,8 @@ import org.apache.hadoop.mapreduce.lib.input.NLineInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -41,14 +42,34 @@ public class HadoopBTERGenerator {
             String degreeSequenceFile = hadoopDir+"/degreeSequence";
             String ccPerDegreeFile = hadoopDir+"/ccs";
 
-            int [] degreeSequence = Algorithms.GenerateDegreeSequence(degreeSequenceFile, numNodes, seed);
+
+            FileSystem fs = FileSystem.get(conf);
+            BufferedReader reader = new BufferedReader( new InputStreamReader(fs.open( new Path(degreeSequenceFile))));
+            ArrayList<Integer> observedDegreeSequence = new ArrayList<Integer>();
+            String line;
+            line = reader.readLine();
+            while(line!=null) {
+                observedDegreeSequence.add(Integer.parseInt(line));
+                line = reader.readLine();
+            }
+
+            int [] degreeSequence = Algorithms.GenerateDegreeSequence(observedDegreeSequence, numNodes, seed);
 
             int maxDegree = Integer.MIN_VALUE;
             for(int i = 0; i < degreeSequence.length; ++i) {
                 maxDegree = degreeSequence[i] > maxDegree ? degreeSequence[i] : maxDegree;
             }
 
-            double [] cc = Algorithms.GenerateCCperDegree(ccPerDegreeFile,maxDegree);
+            reader = new BufferedReader( new InputStreamReader(fs.open( new Path(ccPerDegreeFile))));
+            ArrayList<Pair<Long,Double>> ccPerDegree = new ArrayList<Pair<Long,Double>>();
+            line = reader.readLine();
+            while(line!=null) {
+                String [] splitLine = line.split(" ");
+                ccPerDegree.add( new Pair<Long,Double>(Long.parseLong(splitLine[0]), Double.parseDouble(splitLine[1])));
+                line = reader.readLine();
+            }
+
+            double [] cc = Algorithms.GenerateCCperDegree(ccPerDegree,maxDegree);
 
             BTERStats stats = new BTERStats();
             stats.initialize(degreeSequence,cc);

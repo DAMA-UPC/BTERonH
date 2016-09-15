@@ -11,9 +11,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Created by aprat on 14/07/16.
@@ -38,31 +36,19 @@ public class Algorithms {
         return max;
     }
 
-    public static int [] GenerateDegreeSequence( String empiricalDegreeSequenceFile, int numNodes, int seed ) {
+    public static int [] GenerateDegreeSequence(List<Integer> observedSequence, int numNodes, int seed ) {
 
-        EmpiricalDist degreeDistribution = null;
-        try {
-
-            BufferedReader reader = new BufferedReader(new FileReader(empiricalDegreeSequenceFile));
-            String line;
-            ArrayList<Integer> fileData = new ArrayList<Integer>();
-            while ((line = reader.readLine()) != null) {
-                fileData.add(Integer.parseInt(line));
+        observedSequence.sort( new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return o1 - o2;
             }
-            reader.close();
-            double [] degreeSequence = new double[fileData.size()];
-            int index = 0;
-            for(Integer i : fileData) {
-                degreeSequence[index] = i;
-                index++;
-            }
-
-            Arrays.sort(degreeSequence);
-            degreeDistribution = new EmpiricalDist(degreeSequence);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(-1);
+        });
+        double [] sequence = new double[observedSequence.size()];
+        for(int i = 0; i < observedSequence.size(); ++i){
+            sequence[i] = observedSequence.get(i);
         }
+        EmpiricalDist degreeDistribution = new EmpiricalDist(sequence);
 
         System.out.println("Generating Degree Sequence");
 
@@ -84,23 +70,10 @@ public class Algorithms {
         return degreeSequence;
     }
 
-    public static double [] GenerateCCperDegree( String empiricalCCperDegreeFile, int maxDegree) {
+    public static double [] GenerateCCperDegree( ArrayList<Pair<Long,Double>> ccDistribution, int maxDegree) {
 
         double [] cc = new double[maxDegree+1];
         System.out.println("Loading CC distribution");
-        ArrayList<Pair<Long,Double>> ccDistribution = new ArrayList<Pair<Long,Double>>();
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(empiricalCCperDegreeFile));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String data[] = line.split(" ");
-                ccDistribution.add(new Pair<Long, Double>(Long.parseLong(data[0]), Double.parseDouble(data[1])));
-            }
-            reader.close();
-        } catch( IOException e) {
-            e.printStackTrace();
-        }
-
         cc[0] = 0.0;
         cc[1] = 0.0;
         for(int i = 2; i < maxDegree+1; ++i) {
