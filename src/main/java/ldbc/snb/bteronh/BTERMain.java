@@ -4,6 +4,8 @@ import com.beust.jcommander.JCommander;
 import ldbc.snb.bteronh.hadoop.HadoopBTERGenerator;
 import ldbc.snb.bteronh.structures.Arguments;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -47,8 +49,13 @@ class BTERMain {
         conf.set("ldbc.snb.bteronh.serializer.dataDir",conf.get("ldbc.snb.bteronh.serializer.outputDir")+"/data");
         conf.set("ldbc.snb.bteronh.serializer.hadoopDir",conf.get("ldbc.snb.bteronh.serializer.outputDir")+"/hadoop");
 
-        HadoopBTERGenerator bterGenerator = new HadoopBTERGenerator(conf);
+
         try {
+        FileSystem dfs = FileSystem.get(conf);
+        dfs.delete(new Path(conf.get("ldbc.snb.bteronh.serializer.hadoopDir")), true);
+        dfs.delete(new Path(conf.get("ldbc.snb.bteronh.serializer.dataDir")), true);
+
+        HadoopBTERGenerator bterGenerator = new HadoopBTERGenerator(conf);
             bterGenerator.run();
         } catch(Exception e) {
             e.printStackTrace();
