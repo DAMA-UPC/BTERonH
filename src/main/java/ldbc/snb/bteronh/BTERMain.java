@@ -52,8 +52,12 @@ public class BTERMain {
         dfs.delete(new Path(conf.get("ldbc.snb.bteronh.serializer.hadoopDir")), true);
         dfs.delete(new Path(conf.get("ldbc.snb.bteronh.serializer.dataDir")), true);
 
-        HadoopBTERGenerator bterGenerator = new HadoopBTERGenerator(conf);
+            System.out.println("Starting execution");
+            long start = System.currentTimeMillis();
+            HadoopBTERGenerator bterGenerator = new HadoopBTERGenerator(conf);
             bterGenerator.run();
+            long end = System.currentTimeMillis();
+            System.out.println("Execution time: "+(end-start)/1000.0+" second");
         } catch(Exception e) {
             e.printStackTrace();
             System.exit(1);
