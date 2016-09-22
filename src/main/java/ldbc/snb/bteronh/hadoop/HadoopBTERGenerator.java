@@ -66,7 +66,7 @@ public class HadoopBTERGenerator {
 
             System.out.println("Initializing BTER stats");
             BTERStats stats = new BTERStats();
-            stats.initialize(numNodes, observedDegreeSequence, ccPerDegree, seed);
+            stats.initialize(numNodes, observedDegreeSequence, ccPerDegree, seed, (i) -> context.setStatus("Generated "+i+" degrees at mapper "+threadId));
 
             int totalWeight = stats.getWeightPhase1()+stats.getWeightPhase2();
             int blockSize =  totalWeight / numThreads;

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Created by aprat on 14/07/16.
@@ -38,7 +39,7 @@ public class BTERStats {
     int weightPhase1;
     int weightPhase2;
 
-    public void initialize(long numNodes, ArrayList<Integer> observedDegreeSequence, ArrayList<Pair<Long,Double>> observedCCPerDegree, int seed) {
+    public void initialize(long numNodes, ArrayList<Integer> observedDegreeSequence, ArrayList<Pair<Long,Double>> observedCCPerDegree, int seed, Consumer<Integer> continuation) {
 
         maxDegree = Integer.MIN_VALUE;
         RandomVariateGen randomVariateGen = Algorithms.GetDegreeSequenceSampler(observedDegreeSequence, numNodes, seed);
@@ -49,6 +50,9 @@ public class BTERStats {
             int degree = (int)randomVariateGen.nextDouble();
             degrees.compute(degree,(k,v)-> v == null ? 1 : v + 1 );
             maxDegree = degree > maxDegree ? degree : maxDegree;
+            if(i % 1000000 == 0) {
+                continuation.accept(i);
+            }
         }
 
         double [] ccPerDegree = Algorithms.GenerateCCperDegree(observedCCPerDegree,maxDegree);
