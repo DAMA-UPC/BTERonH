@@ -17,7 +17,7 @@ public class BTERMain {
         System.out.println("Generating edges");
         Configuration conf = new Configuration();
         conf.setInt("ldbc.snb.bteronh.generator.numThreads",1);
-        conf.setInt("ldbc.snb.bteronh.generator.numNodes",10000);
+        conf.setLong("ldbc.snb.bteronh.generator.numNodes",10000);
         conf.setInt("ldbc.snb.bteronh.generator.seed",12323540);
         conf.set("ldbc.snb.bteronh.serializer.outputDir","./");
         conf.set("ldbc.snb.bteronh.generator.degreeSequence","src/main/resources/degreeSequences/dblp");

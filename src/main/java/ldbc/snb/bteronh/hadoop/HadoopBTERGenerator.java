@@ -37,7 +37,7 @@ public class HadoopBTERGenerator {
             int threadId = Integer.parseInt(value.toString());
             int seed = conf.getInt("ldbc.snb.bteronh.generator.seed",0);
             int numThreads = conf.getInt("ldbc.snb.bteronh.generator.numThreads",1);
-            int numNodes = conf.getInt("ldbc.snb.bteronh.generator.numNodes",10000);
+            long numNodes = conf.getLong("ldbc.snb.bteronh.generator.numNodes",10000);
             String hadoopDir = new String( conf.get("ldbc.snb.bteronh.serializer.hadoopDir"));
             String degreeSequenceFile = hadoopDir+"/degreeSequence";
             String ccPerDegreeFile = hadoopDir+"/ccs";
@@ -53,12 +53,6 @@ public class HadoopBTERGenerator {
                 line = reader.readLine();
             }
 
-            int [] degreeSequence = Algorithms.GenerateDegreeSequence(observedDegreeSequence, numNodes, seed);
-
-            int maxDegree = Integer.MIN_VALUE;
-            for(int i = 0; i < degreeSequence.length; ++i) {
-                maxDegree = degreeSequence[i] > maxDegree ? degreeSequence[i] : maxDegree;
-            }
 
             reader = new BufferedReader( new InputStreamReader(fs.open( new Path(ccPerDegreeFile))));
             ArrayList<Pair<Long,Double>> ccPerDegree = new ArrayList<Pair<Long,Double>>();
@@ -69,10 +63,10 @@ public class HadoopBTERGenerator {
                 line = reader.readLine();
             }
 
-            double [] cc = Algorithms.GenerateCCperDegree(ccPerDegree,maxDegree);
 
+            System.out.println("Initializing BTER stats");
             BTERStats stats = new BTERStats();
-            stats.initialize(degreeSequence,cc);
+            stats.initialize(numNodes, observedDegreeSequence, ccPerDegree, seed);
 
             int totalWeight = stats.getWeightPhase1()+stats.getWeightPhase2();
             int blockSize =  totalWeight / numThreads;

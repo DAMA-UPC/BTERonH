@@ -36,8 +36,9 @@ public class Algorithms {
         return max;
     }
 
-    public static int [] GenerateDegreeSequence(List<Integer> observedSequence, int numNodes, int seed ) {
+    public static RandomVariateGen GetDegreeSequenceSampler(List<Integer> observedSequence, long numNodes, int seed ) {
 
+        System.out.println("Creating sampler for degree sequence generation");
         observedSequence.sort( new Comparator<Integer>() {
             @Override
             public int compare(Integer o1, Integer o2) {
@@ -50,7 +51,6 @@ public class Algorithms {
         }
         EmpiricalDist degreeDistribution = new EmpiricalDist(sequence);
 
-        System.out.println("Generating Degree Sequence");
 
         LFSR113 random = new LFSR113();
         int [] seeds = new int[4];
@@ -61,19 +61,13 @@ public class Algorithms {
         //LFSR113.setPackageSeed(seeds);
         random.setSeed(seeds);
         RandomVariateGen randomVariateGen = new RandomVariateGen(random,degreeDistribution);
-        int maxDegree = Integer.MIN_VALUE;
-        int [] degreeSequence = new int[numNodes];
-        for(int i = 0; i < numNodes; ++i) {
-            degreeSequence[i] = (int)randomVariateGen.nextDouble();
-            maxDegree = degreeSequence[i] > maxDegree ? degreeSequence[i] : maxDegree;
-        }
-        return degreeSequence;
+        return randomVariateGen;
     }
 
     public static double [] GenerateCCperDegree( ArrayList<Pair<Long,Double>> ccDistribution, int maxDegree) {
 
-        double [] cc = new double[maxDegree+1];
         System.out.println("Loading CC distribution");
+        double [] cc = new double[maxDegree+1];
         cc[0] = 0.0;
         cc[1] = 0.0;
         for(int i = 2; i < maxDegree+1; ++i) {
@@ -116,7 +110,7 @@ public class Algorithms {
 
     public static Edge BTERSample(BTERStats stats, Random random) throws IOException {
 
-        int totalWeight = stats.getWeightPhase1()+stats.getWeightPhase2();
+        long totalWeight = stats.getWeightPhase1()+stats.getWeightPhase2();
         double prob = random.nextDouble();
         if(prob < stats.getWeightPhase1()/(double)(totalWeight)) {
             return BTERSamplePhase1(stats,random);
@@ -128,7 +122,7 @@ public class Algorithms {
     public static Edge BTERSamplePhase1(BTERStats stats, Random random) throws IOException{
         int group = SampleCumulative(stats.getCumulativeGroups(),random);
         double r1 = random.nextDouble();
-        int offset = stats.getGroupIndex(group) + (int)Math.floor(r1*stats.getGroupNumBuckets(group))*stats.getGroupBucketSize(group);
+        int offset = (int)(stats.getGroupIndex(group) + (int)Math.floor(r1*stats.getGroupNumBuckets(group))*stats.getGroupBucketSize(group));
         double r2 = random.nextDouble();
         int firstNode = (int)Math.floor(r2*stats.getGroupBucketSize(group)) + offset;
         double r3 = random.nextDouble();
@@ -140,19 +134,19 @@ public class Algorithms {
     }
 
     public static Edge BTERSamplePhase2(BTERStats stats, Random random) throws IOException {
-        int firstNode = BTERSampleNodePhase2(stats, random);
-        int secondNode = BTERSampleNodePhase2(stats, random);
+        long firstNode = BTERSampleNodePhase2(stats, random);
+        long secondNode = BTERSampleNodePhase2(stats, random);
         return new Edge(firstNode, secondNode);
     }
 
-    public static int BTERSampleNodePhase2(BTERStats stats, Random random) {
+    public static long BTERSampleNodePhase2(BTERStats stats, Random random) {
         int degree = SampleCumulative(stats.getCumulativeDegrees(),random)+1;
         double r1 = random.nextDouble();
         double r2 = random.nextDouble();
         if(r1 < stats.getDegreeWeightRatio(degree)) {
-            return (int)Math.floor(r2*stats.getDegreeNFill(degree)) + stats.getDegreeIndex(degree);
+            return (long)Math.floor(r2*stats.getDegreeNFill(degree)) + stats.getDegreeIndex(degree);
         } else {
-            return (int)Math.floor(r2*(stats.getDegreeN(degree) - stats.getDegreeNFill(degree))) + stats.getDegreeIndex(degree) + stats.getDegreeNFill(degree);
+            return (long)Math.floor(r2*(stats.getDegreeN(degree) - stats.getDegreeNFill(degree))) + stats.getDegreeIndex(degree) + stats.getDegreeNFill(degree);
         }
     }
 }
