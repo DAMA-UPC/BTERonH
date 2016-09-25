@@ -68,17 +68,17 @@ public class HadoopBTERGenerator {
             BTERStats stats = new BTERStats();
             stats.initialize(numNodes, observedDegreeSequence, ccPerDegree, seed, (i) -> context.setStatus("Generated "+i+" degrees at mapper "+threadId));
 
-            int totalWeight = stats.getWeightPhase1()+stats.getWeightPhase2();
-            int blockSize =  totalWeight / numThreads;
+            long totalWeight = stats.getWeightPhase1()+stats.getWeightPhase2();
+            long blockSize =  totalWeight / numThreads;
             if(threadId == 0) {
-                int residual = totalWeight % numThreads;
+                long residual = totalWeight % numThreads;
                 blockSize += residual;
             }
 
             System.out.println("Mapper "+threadId+": Generating "+blockSize+" edges out of "+totalWeight);
             Random random = new Random();
             random.setSeed(seed+threadId);
-            for(int i = 0; i < blockSize; ++i) {
+            for(long i = 0; i < blockSize; ++i) {
                 Edge edge = Algorithms.BTERSample(stats,random);
                 context.write(new LongWritable(edge.getTail()), new LongWritable(edge.getHead()));
                 if( i % 100000 == 0 ) {

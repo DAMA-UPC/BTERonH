@@ -122,11 +122,11 @@ public class Algorithms {
     public static Edge BTERSamplePhase1(BTERStats stats, Random random) throws IOException{
         int group = SampleCumulative(stats.getCumulativeGroups(),random);
         double r1 = random.nextDouble();
-        int offset = (int)(stats.getGroupIndex(group) + (int)Math.floor(r1*stats.getGroupNumBuckets(group))*stats.getGroupBucketSize(group));
+        long offset = (stats.getGroupIndex(group) + (long)Math.floor(r1*stats.getGroupNumBuckets(group))*stats.getGroupBucketSize(group));
         double r2 = random.nextDouble();
-        int firstNode = (int)Math.floor(r2*stats.getGroupBucketSize(group)) + offset;
+        long firstNode = (long)Math.floor(r2*stats.getGroupBucketSize(group)) + offset;
         double r3 = random.nextDouble();
-        int secondNode = (int)Math.floor(r3*(stats.getGroupBucketSize(group)-1)) + offset;
+        long secondNode = (long)Math.floor(r3*(stats.getGroupBucketSize(group)-1)) + offset;
         if( secondNode >= firstNode )  {
             secondNode+=1;
         }
