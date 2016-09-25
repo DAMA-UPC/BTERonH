@@ -39,14 +39,14 @@ public class BTERStats {
     int weightPhase1;
     int weightPhase2;
 
-    public void initialize(long numNodes, ArrayList<Integer> observedDegreeSequence, ArrayList<Pair<Long,Double>> observedCCPerDegree, int seed, Consumer<Integer> continuation) {
+    public void initialize(long numNodes, ArrayList<Integer> observedDegreeSequence, ArrayList<Pair<Long,Double>> observedCCPerDegree, int seed, Consumer<Long> continuation) {
 
         maxDegree = Integer.MIN_VALUE;
         RandomVariateGen randomVariateGen = Algorithms.GetDegreeSequenceSampler(observedDegreeSequence, numNodes, seed);
 
         System.out.println("Generating Degree Sequence");
         HashMap<Integer,Long> degrees = new HashMap<Integer,Long>();
-        for(int i = 0; i < numNodes; ++i) {
+        for(long i = 0; i < numNodes; ++i) {
             int degree = (int)randomVariateGen.nextDouble();
             degrees.compute(degree,(k,v)-> v == null ? 1 : v + 1 );
             maxDegree = degree > maxDegree ? degree : maxDegree;
