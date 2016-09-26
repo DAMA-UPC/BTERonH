@@ -36,8 +36,8 @@ public class BTERStats {
 
     double [] cumulativeGroups = null;
     double [] cumulativeDegrees = null;
-    int weightPhase1;
-    int weightPhase2;
+    long weightPhase1;
+    long weightPhase2;
 
     public void initialize(long numNodes, ArrayList<Integer> observedDegreeSequence, ArrayList<Pair<Long,Double>> observedCCPerDegree, int seed, Consumer<Long> continuation) {
 
@@ -175,8 +175,8 @@ public class BTERStats {
         b_g = newb_g;
         w_g = neww_g;
 
-        weightPhase1 = 0;
-        weightPhase2 = 0;
+        weightPhase1 = 0L;
+        weightPhase2 = 0L;
         for(int i = 0; i < getNumGroups(); ++i) {
             weightPhase1+= getGroupWeight(i);
         }
@@ -242,11 +242,11 @@ public class BTERStats {
         return cumulativeDegrees;
     }
 
-    public int getWeightPhase1() {
+    public long getWeightPhase1() {
         return weightPhase1;
     }
 
-    public int getWeightPhase2() {
+    public long getWeightPhase2() {
         return weightPhase2;
     }
 
