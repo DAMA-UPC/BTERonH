@@ -17,7 +17,7 @@ java -cp target/bteronh-0.0.1-jar-with-dependencies.jar ldbc.snb.bteronh.BTERMai
 For pseudo-/distributed hadoop:
 
 ```
-hadoop jar target/bteronh-0.0.1-jar-with-dependencies.jar -P params.ini
+hadoop jar target/bteronh-0.0.1-jar-with-dependencies.jar ldbc.snb.bteronh.BTERMain -P params.ini
 ```
 These commands produce a file edge\_0 in folder ./data/data
 
