@@ -35,7 +35,7 @@ public class DegreeDistribution {
         public String outputfolder = new String();
 
         @Parameter(names = "-numthreads")
-        public int numthreads = 16;
+        public int numthreads = 1;
 
     }
 
