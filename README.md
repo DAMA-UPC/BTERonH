@@ -32,3 +32,13 @@ Supports the following options, which can be passed via the params.ini files usi
 * ldbc.snb.bteronh.generator.degreeSequence:X -- The file containing the degree sequence to reproduce. For examples see src/main/resources/degreeSequences
 * ldbc.snb.bteronh.generator.ccPerDegree:X -- The file containing the list of avg. clustering coefficient per degree. For examples see src/main.resources/CCs
 
+## Tools
+
+### DegreeDistribution
+There is a tool for computing the degree distribution in a distributed way using hadoop, which is specially useful for large graphs.
+
+```
+hadoop jar target/bteronh-0.0.1-jar-with-dependencies.jar ldbc.snb.bteronh.BTERMain -inputfiles <list of edge list files> -outputfolder <hdfs folder where data will be output>
+```
+The tool will output several files containing the degree distribution
+
