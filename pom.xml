@@ -96,16 +96,16 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <version>2.4</version>
         <configuration>
-          <archive>
+          <!--<archive>
             <manifest>
               <mainClass>ldbc.snb.bteronh.BTERMain</mainClass>
             </manifest>
-          </archive>
+          </archive>-->
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
         </configuration>
-      </plugin>
+      </plugin> 
     </plugins>
   </build>
 </project>
