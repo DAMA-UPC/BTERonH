@@ -34,6 +34,9 @@ public class DegreeDistribution {
         @Parameter(names = "-outputfolder", required = true)
         public String outputfolder = new String();
 
+        @Parameter(names = "-numthreads")
+        public int numthreads = 1;
+
     }
 
     public static class EdgeMapper  extends Mapper<LongWritable, Text, LongWritable, LongWritable> {
@@ -165,6 +168,7 @@ public class DegreeDistribution {
             job.setJarByClass(EdgeMapper.class);
             job.setMapperClass(EdgeMapper.class);
             job.setReducerClass(EdgeReducer.class);
+            job.setNumReduceTasks(arguments.numthreads);
             job.setInputFormatClass(TextInputFormat.class);
             job.setOutputFormatClass(SequenceFileOutputFormat.class);
             job.setPartitionerClass(EdgePartitioner.class);
@@ -189,6 +193,7 @@ public class DegreeDistribution {
             job.setJarByClass(DegreeMapper.class);
             job.setMapperClass(DegreeMapper.class);
             job.setReducerClass(DegreeReducer.class);
+            job.setNumReduceTasks(arguments.numthreads);
             job.setInputFormatClass(SequenceFileInputFormat.class);
             job.setOutputFormatClass(SequenceFileOutputFormat.class);
             job.setPartitionerClass(DegreePartitioner.class);
