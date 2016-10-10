@@ -151,8 +151,7 @@ public class DegreeDistribution {
             Path paths [] = new Path[arguments.inputfiles.size()];
             int index = 0;
             for(String file : arguments.inputfiles) {
-                Path path = new Path(hadoopDir + "/"+file);
-                dfs.copyFromLocalFile(new Path(file), path);
+                Path path = new Path(file);
                 paths[index] = path;
                 index+=1;
             }
