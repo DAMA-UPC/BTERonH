@@ -138,8 +138,8 @@ public class DegreeDistribution {
 
         conf = new Configuration();
         conf.set("ldbc.snb.bteronh.serializer.outputDir",arguments.outputfolder);
-        conf.set("ldbc.snb.bteronh.serializer.dataDir",conf.get("ldbc.snb.bteronh.serializer.outputDir")+"/data");
-        conf.set("ldbc.snb.bteronh.serializer.hadoopDir",conf.get("ldbc.snb.bteronh.serializer.outputDir")+"/hadoop");
+        conf.set("ldbc.snb.bteronh.serializer.dataDir",conf.get("ldbc.snb.bteronh.serializer.outputDir")+"/distribution/data");
+        conf.set("ldbc.snb.bteronh.serializer.hadoopDir",conf.get("ldbc.snb.bteronh.serializer.outputDir")+"/distribution/hadoop");
 
         try {
             FileSystem dfs = FileSystem.get(conf);
