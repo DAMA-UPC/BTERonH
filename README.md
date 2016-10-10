@@ -40,5 +40,8 @@ There is a tool for computing the degree distribution in a distributed way using
 ```
 hadoop jar target/bteronh-0.0.1-jar-with-dependencies.jar ldbc.snb.bteronh.BTERMain -inputfiles <list of edge list files> -outputfolder <hdfs folder where data will be output>
 ```
-The tool will output several files containing the degree distribution
+The tool will output several files containing the degree distribution. The tool accepts three options
+* -inputfiles -- A list of files containing one edge per line (without repeated edges)
+* -outputfolder -- The hdfs folder where the distribution will be output
+* -numthreads -- Number of threads to use for the reducing phase
 
