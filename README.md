@@ -38,7 +38,7 @@ Supports the following options, which can be passed via the params.ini files usi
 There is a tool for computing the degree distribution in a distributed way using hadoop, which is specially useful for large graphs.
 
 ```
-hadoop jar target/bteronh-0.0.1-jar-with-dependencies.jar ldbc.snb.bteronh.BTERMain -inputfiles <list of edge list files> -outputfolder <hdfs folder where data will be output>
+hadoop jar target/bteronh-0.0.1-jar-with-dependencies.jar ldbc.snb.bteronh.tools.DegreeDistribution -inputfiles <list of edge list files> -outputfolder <hdfs folder where data will be output>
 ```
 The tool will output several files containing the degree distribution. The tool accepts three options
 * -inputfiles -- A list of files containing one edge per line (without repeated edges)
