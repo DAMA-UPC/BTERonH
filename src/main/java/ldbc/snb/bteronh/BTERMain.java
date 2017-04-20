@@ -19,7 +19,8 @@ public class BTERMain {
         conf.setInt("ldbc.snb.bteronh.generator.numThreads",1);
         conf.setLong("ldbc.snb.bteronh.generator.numNodes",10000);
         conf.setInt("ldbc.snb.bteronh.generator.seed",12323540);
-        conf.set("ldbc.snb.bteronh.serializer.outputDir","./");
+        conf.set("ldbc.snb.bteronh.serializer.workspace","./");
+        conf.set("ldbc.snb.bteronh.serializer.outputFileName", "edges");
         conf.set("ldbc.snb.bteronh.generator.degreeSequence","src/main/resources/degreeSequences/dblp");
         conf.set("ldbc.snb.bteronh.generator.ccPerDegree","src/main/resources/CCs/dblp");
 
@@ -43,14 +44,8 @@ public class BTERMain {
             }
         }
 
-        conf.set("ldbc.snb.bteronh.serializer.dataDir",conf.get("ldbc.snb.bteronh.serializer.outputDir")+"/data");
-        conf.set("ldbc.snb.bteronh.serializer.hadoopDir",conf.get("ldbc.snb.bteronh.serializer.outputDir")+"/hadoop");
-
 
         try {
-        FileSystem dfs = FileSystem.get(conf);
-        dfs.delete(new Path(conf.get("ldbc.snb.bteronh.serializer.hadoopDir")), true);
-        dfs.delete(new Path(conf.get("ldbc.snb.bteronh.serializer.dataDir")), true);
 
             System.out.println("Starting execution");
             long start = System.currentTimeMillis();

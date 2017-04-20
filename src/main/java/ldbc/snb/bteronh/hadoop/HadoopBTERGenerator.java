@@ -16,6 +16,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.NLineInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -91,24 +92,6 @@ public class HadoopBTERGenerator {
 
     public static class HadoopBTERGeneratorReducer  extends Reducer<LongWritable,LongWritable, LongWritable, LongWritable> {
 
-        private OutputStream outputStream  = null;
-
-        @Override
-        public void setup(Context context) {
-            try {
-                Configuration conf = context.getConfiguration();
-                String dataDir = conf.get("ldbc.snb.bteronh.serializer.dataDir");
-                int reducerId = context.getTaskAttemptID().getTaskID().getId();
-
-                FileSystem fs = FileSystem.get(conf);
-                outputStream = fs.create(new Path(dataDir + "/edges_"+ reducerId), true, 131072);
-            } catch (IOException e) {
-                System.err.println(e.getMessage());
-                System.exit(-1);
-            }
-
-        }
-
         @Override
         public void reduce(LongWritable tail, Iterable<LongWritable> valueSet,
                            Context context) throws IOException, InterruptedException {
@@ -119,13 +102,8 @@ public class HadoopBTERGenerator {
 
             for( Long head : neighbors) {
                 String str = new String(tail + " " + head + "\n");
-                outputStream.write(str.getBytes());
+                context.write(tail,new LongWritable(head));
             }
-        }
-
-        @Override
-        protected void cleanup(Context context) throws IOException, InterruptedException {
-            outputStream.close();
         }
     }
 
@@ -149,10 +127,16 @@ public class HadoopBTERGenerator {
 
     public void run() throws Exception {
 
+        conf.set("ldbc.snb.bteronh.serializer.dataDir",conf.get("ldbc.snb.bteronh.serializer.workspace")+"/data");
+        conf.set("ldbc.snb.bteronh.serializer.hadoopDir",conf.get("ldbc.snb.bteronh.serializer.workspace")+"/hadoop");
         String hadoopDir = new String( conf.get("ldbc.snb.bteronh.serializer.hadoopDir"));
+        String dataDir = new String( conf.get("ldbc.snb.bteronh.serializer.dataDir"));
         String tempFile = hadoopDir+"/mrInputFile";
+        String outputFileName = conf.get("ldbc.snb.bteronh.serializer.outputFileName","edges");
 
         FileSystem dfs = FileSystem.get(conf);
+        dfs.delete(new Path(hadoopDir), true);
+        dfs.delete(new Path(dataDir), true);
         dfs.delete(new Path(tempFile), true);
         writeToOutputFile(tempFile, Integer.parseInt(conf.get("ldbc.snb.bteronh.generator.numThreads")), conf);
 
@@ -176,11 +160,11 @@ public class HadoopBTERGenerator {
         job.setInputFormatClass(NLineInputFormat.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
         job.setPartitionerClass(HadoopEdgePartitioner.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
         FileInputFormat.setInputPaths(job, new Path(tempFile));
-        FileOutputFormat.setOutputPath(job, new Path(hadoopDir+"/blackhole"));
+        FileOutputFormat.setOutputPath(job, new Path(dataDir+"/"+outputFileName));
         if(!job.waitForCompletion(true)) {
             throw new Exception();
         }
-        dfs.delete(new Path(hadoopDir+"/blackhole"),true);
     }
 }
