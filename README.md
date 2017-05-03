@@ -28,7 +28,8 @@ Supports the following options, which can be passed via the params.ini files usi
 * ldbc.snb.bteronh.generator.numThreads:X -- The number of threads to use. This also determines the number of output edge\_* files.
 * ldbc.snb.bteronh.generator.numNodes:X -- The number of nodes in the resulting graph
 * ldbc.snb.bteronh.generator.seed:X -- The seed used to generate the graph.
-* ldbc.snb.bteronh.serializer.outputDir:X -- The folder where data will be output
+* ldbc.snb.bteronh.serializer.workspace:X -- The folder where data will be output
+* ldbc.snb.bteronh.serializer.outputFileName:X -- The output file name 
 * ldbc.snb.bteronh.generator.degreeSequence:X -- The file containing the degree sequence to reproduce. For examples see src/main/resources/degreeSequences
 * ldbc.snb.bteronh.generator.ccPerDegree:X -- The file containing the list of avg. clustering coefficient per degree. For examples see src/main.resources/CCs
 
