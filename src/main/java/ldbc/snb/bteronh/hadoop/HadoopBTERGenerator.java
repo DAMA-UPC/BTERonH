@@ -39,9 +39,8 @@ public class HadoopBTERGenerator {
             int seed = conf.getInt("ldbc.snb.bteronh.generator.seed",0);
             int numThreads = conf.getInt("ldbc.snb.bteronh.generator.numThreads",1);
             long numNodes = conf.getLong("ldbc.snb.bteronh.generator.numNodes",10000);
-            String hadoopDir = new String( conf.get("ldbc.snb.bteronh.serializer.hadoopDir"));
-            String degreeSequenceFile = hadoopDir+"/degreeSequence";
-            String ccPerDegreeFile = hadoopDir+"/ccs";
+            String degreeSequenceFile = conf.get("ldbc.snb.bteronh.generator.degreeSequence");
+            String ccPerDegreeFile = conf.get("ldbc.snb.bteronh.generator.ccPerDegree");
 
 
             FileSystem fs = FileSystem.get(conf);
@@ -132,7 +131,7 @@ public class HadoopBTERGenerator {
         String hadoopDir = new String( conf.get("ldbc.snb.bteronh.serializer.hadoopDir"));
         String dataDir = new String( conf.get("ldbc.snb.bteronh.serializer.dataDir"));
         String tempFile = hadoopDir+"/mrInputFile";
-        String outputFileName = conf.get("ldbc.snb.bteronh.serializer.outputFileName","edges");
+        String outputFileName = conf.get("ldbc.snb.bteronh.serializer.outputFileName",dataDir+"/edges");
 
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(hadoopDir), true);
@@ -140,11 +139,17 @@ public class HadoopBTERGenerator {
         dfs.delete(new Path(tempFile), true);
         writeToOutputFile(tempFile, Integer.parseInt(conf.get("ldbc.snb.bteronh.generator.numThreads")), conf);
 
-        dfs.copyFromLocalFile(new Path(conf.get("ldbc.snb.bteronh.generator.degreeSequence")),
+        /*
+        String degreesFile = conf.get("ldbc.snb.bteronh.generator.degreeSequence");
+        dfs.copyFromLocalFile(new Path(degreesFile),
                 new Path(hadoopDir+"/degreeSequence"));
+        conf.set("ldbc.snb.bteronh.generator.degreeSequence",hadoopDir+"/degreeSequence");
 
-        dfs.copyFromLocalFile(new Path(conf.get("ldbc.snb.bteronh.generator.ccPerDegree")),
+        String ccsFile = conf.get("ldbc.snb.bteronh.generator.ccPerDegree");
+        dfs.copyFromLocalFile(new Path(ccsFile),
                 new Path(hadoopDir+"/ccs"));
+
+        conf.set("ldbc.snb.bteronh.generator.ccPerDegree",hadoopDir+"/ccs");*/
 
         int numThreads = Integer.parseInt(conf.get("ldbc.snb.bteronh.generator.numThreads"));
         conf.setInt("mapreduce.input.lineinputformat.linespermap", 1);
@@ -162,7 +167,7 @@ public class HadoopBTERGenerator {
         job.setPartitionerClass(HadoopEdgePartitioner.class);
         job.setOutputFormatClass(TextOutputFormat.class);
         FileInputFormat.setInputPaths(job, new Path(tempFile));
-        FileOutputFormat.setOutputPath(job, new Path(dataDir+"/"+outputFileName));
+        FileOutputFormat.setOutputPath(job, new Path(outputFileName));
         if(!job.waitForCompletion(true)) {
             throw new Exception();
         }
