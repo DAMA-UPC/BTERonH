@@ -21,6 +21,17 @@ hadoop jar target/bteronh-0.0.1-jar-with-dependencies.jar ldbc.snb.bteronh.BTERM
 ```
 These commands produce a file edge\_0 in folder ./data/data
 
+## Maven repository
+You can use the BTERonH as a library using the following maven repository
+```
+<repositories>
+    <repository>
+      <id>bteronh</id>
+      <url>https://github.com/DAMA-UPC/BTERonH/raw/mvn-repo/</url>
+    </repository>
+</repositories>
+```
+
 ## Configuration
 
 Supports the following options, which can be passed via the params.ini files using the -P option, or via command line using the -p option (-p "option:value").
