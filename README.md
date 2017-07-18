@@ -12,12 +12,12 @@ mvn assembly:assembly
 For standalone hadoop:
 
 ```
-java -cp target/bteronh-0.0.1-jar-with-dependencies.jar ldbc.snb.bteronh.BTERMain -P params.ini
+java -cp target/bteronh-0.0.2-jar-with-dependencies.jar ldbc.snb.bteronh.BTERMain -P params.ini
 ```
 For pseudo-/distributed hadoop:
 
 ```
-hadoop jar target/bteronh-0.0.1-jar-with-dependencies.jar ldbc.snb.bteronh.BTERMain -P params.ini
+hadoop jar target/bteronh-0.0.2-jar-with-dependencies.jar ldbc.snb.bteronh.BTERMain -P params.ini
 ```
 These commands produce a file edge\_0 in folder ./data/data
 
