@@ -20,7 +20,6 @@ public class BTERMain {
         conf.setLong("ldbc.snb.bteronh.generator.numNodes",10000);
         conf.setInt("ldbc.snb.bteronh.generator.seed",12323540);
         conf.set("ldbc.snb.bteronh.serializer.workspace","./");
-        conf.set("ldbc.snb.bteronh.serializer.outputFileName", "edges");
         conf.set("ldbc.snb.bteronh.generator.degreeSequence","src/main/resources/degreeSequences/dblp");
         conf.set("ldbc.snb.bteronh.generator.ccPerDegree","src/main/resources/CCs/dblp");
 

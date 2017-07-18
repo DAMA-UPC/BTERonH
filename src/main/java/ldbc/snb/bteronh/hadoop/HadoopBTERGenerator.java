@@ -28,7 +28,34 @@ import java.util.Set;
  * Created by aprat on 16/08/16.
  */
 public class HadoopBTERGenerator {
+
+    protected static String isHDFSPath(String fileName) {
+        if (fileName.startsWith("hdfs://")) {
+            return fileName.substring(7);
+        }
+        return null;
+    }
+
+    protected static String isLocalPath(String fileName) {
+        if (fileName.startsWith("file://")) {
+            return fileName.substring(7);
+        }
+        return null;
+    }
+
     public static class HadoopBTERGeneratorMapper  extends Mapper<LongWritable, Text, LongWritable, LongWritable> {
+
+        private BufferedReader getFile(String fileName, Configuration conf) throws IOException {
+            String realFileName;
+            if ((realFileName = isHDFSPath(fileName)) != null) {
+                FileSystem fs = FileSystem.get(conf);
+                return new BufferedReader( new InputStreamReader(fs.open( new Path(realFileName))));
+            } else if((realFileName = isLocalPath(fileName)) != null) {
+                return new BufferedReader(new FileReader(realFileName));
+            } else {
+                throw new IOException("Invalid file URI. It must start with hdfs:// or file://");
+            }
+        }
 
         @Override
         public void map(LongWritable key, Text value, Context context)
@@ -42,9 +69,7 @@ public class HadoopBTERGenerator {
             String degreeSequenceFile = conf.get("ldbc.snb.bteronh.generator.degreeSequence");
             String ccPerDegreeFile = conf.get("ldbc.snb.bteronh.generator.ccPerDegree");
 
-
-            FileSystem fs = FileSystem.get(conf);
-            BufferedReader reader = new BufferedReader( new InputStreamReader(fs.open( new Path(degreeSequenceFile))));
+            BufferedReader reader = getFile(degreeSequenceFile,conf);
             ArrayList<Integer> observedDegreeSequence = new ArrayList<Integer>();
             String line;
             line = reader.readLine();
@@ -53,8 +78,7 @@ public class HadoopBTERGenerator {
                 line = reader.readLine();
             }
 
-
-            reader = new BufferedReader( new InputStreamReader(fs.open( new Path(ccPerDegreeFile))));
+            reader = getFile(ccPerDegreeFile,conf);
             ArrayList<Pair<Long,Double>> ccPerDegree = new ArrayList<Pair<Long,Double>>();
             line = reader.readLine();
             while(line!=null) {
@@ -62,7 +86,6 @@ public class HadoopBTERGenerator {
                 ccPerDegree.add( new Pair<Long,Double>(Long.parseLong(splitLine[0]), Double.parseDouble(splitLine[1])));
                 line = reader.readLine();
             }
-
 
             System.out.println("Initializing BTER stats");
             BTERStats stats = new BTERStats();
@@ -126,30 +149,35 @@ public class HadoopBTERGenerator {
 
     public void run() throws Exception {
 
-        conf.set("ldbc.snb.bteronh.serializer.dataDir",conf.get("ldbc.snb.bteronh.serializer.workspace")+"/data");
-        conf.set("ldbc.snb.bteronh.serializer.hadoopDir",conf.get("ldbc.snb.bteronh.serializer.workspace")+"/hadoop");
+        String workSpace = isHDFSPath(conf.get("ldbc.snb.bteronh.serializer.workspace"));
+        if(workSpace == null) {
+            throw new IOException("Ill-formed workspace URI. Workspace must start with hdfs://");
+        }
+        conf.set("ldbc.snb.bteronh.serializer.dataDir",workSpace+"/data");
+        conf.set("ldbc.snb.bteronh.serializer.hadoopDir",workSpace+"/hadoop");
         String hadoopDir = new String( conf.get("ldbc.snb.bteronh.serializer.hadoopDir"));
         String dataDir = new String( conf.get("ldbc.snb.bteronh.serializer.dataDir"));
         String tempFile = hadoopDir+"/mrInputFile";
-        String outputFileName = conf.get("ldbc.snb.bteronh.serializer.outputFileName",dataDir+"/edges");
+
+        String outputFileName = conf.get("ldbc.snb.bteronh.serializer.outputFileName");
+        if(outputFileName != null){
+            outputFileName = isHDFSPath(outputFileName);
+            if(outputFileName == null)  {
+                throw new IOException("Ill-formed outputFileName URI. OutputFileName must start with hdfs://");
+            }
+        } else {
+            throw new IOException("You need to specify. ldbc.snb.bteronh.serializer.outputFileName");
+        }
+
+        System.out.println(dataDir);
+        System.out.println(hadoopDir);
+        System.out.println(outputFileName);
 
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(hadoopDir), true);
         dfs.delete(new Path(dataDir), true);
         dfs.delete(new Path(tempFile), true);
         writeToOutputFile(tempFile, Integer.parseInt(conf.get("ldbc.snb.bteronh.generator.numThreads")), conf);
-
-        /*
-        String degreesFile = conf.get("ldbc.snb.bteronh.generator.degreeSequence");
-        dfs.copyFromLocalFile(new Path(degreesFile),
-                new Path(hadoopDir+"/degreeSequence"));
-        conf.set("ldbc.snb.bteronh.generator.degreeSequence",hadoopDir+"/degreeSequence");
-
-        String ccsFile = conf.get("ldbc.snb.bteronh.generator.ccPerDegree");
-        dfs.copyFromLocalFile(new Path(ccsFile),
-                new Path(hadoopDir+"/ccs"));
-
-        conf.set("ldbc.snb.bteronh.generator.ccPerDegree",hadoopDir+"/ccs");*/
 
         int numThreads = Integer.parseInt(conf.get("ldbc.snb.bteronh.generator.numThreads"));
         conf.setInt("mapreduce.input.lineinputformat.linespermap", 1);
@@ -169,7 +197,7 @@ public class HadoopBTERGenerator {
         FileInputFormat.setInputPaths(job, new Path(tempFile));
         FileOutputFormat.setOutputPath(job, new Path(outputFileName));
         if(!job.waitForCompletion(true)) {
-            throw new Exception();
+            throw new Exception(job.toString());
         }
     }
 }

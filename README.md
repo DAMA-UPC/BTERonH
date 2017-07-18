@@ -12,12 +12,12 @@ mvn assembly:assembly
 For standalone hadoop:
 
 ```
-java -cp target/bteronh-0.0.2-jar-with-dependencies.jar ldbc.snb.bteronh.BTERMain -P params.ini
+java -cp target/bteronh-0.0.3-jar-with-dependencies.jar ldbc.snb.bteronh.BTERMain -P params.ini
 ```
 For pseudo-/distributed hadoop:
 
 ```
-hadoop jar target/bteronh-0.0.2-jar-with-dependencies.jar ldbc.snb.bteronh.BTERMain -P params.ini
+hadoop jar target/bteronh-0.0.3-jar-with-dependencies.jar ldbc.snb.bteronh.BTERMain -P params.ini
 ```
 These commands produce a file edge\_0 in folder ./data/data
 
@@ -39,10 +39,10 @@ Supports the following options, which can be passed via the params.ini files usi
 * ldbc.snb.bteronh.generator.numThreads:X -- The number of threads to use. This also determines the number of output edge\_* files.
 * ldbc.snb.bteronh.generator.numNodes:X -- The number of nodes in the resulting graph
 * ldbc.snb.bteronh.generator.seed:X -- The seed used to generate the graph.
-* ldbc.snb.bteronh.serializer.workspace:X -- The folder where data will be output
-* ldbc.snb.bteronh.serializer.outputFileName:X -- The output file name 
-* ldbc.snb.bteronh.generator.degreeSequence:X -- The file containing the degree sequence to reproduce. For examples see src/main/resources/degreeSequences
-* ldbc.snb.bteronh.generator.ccPerDegree:X -- The file containing the list of avg. clustering coefficient per degree. For examples see src/main.resources/CCs
+* ldbc.snb.bteronh.serializer.workspace:X -- The folder used as workspace for BTERonH data will be output. Must be an HDFS folder, thus start with "hdfs://"
+* ldbc.snb.bteronh.serializer.outputFileName:X -- The output file name. Must be an HDFS file, thus start with "hdfs://"
+* ldbc.snb.bteronh.generator.degreeSequence:X -- The file containing the degree sequence to reproduce. Can be stored either in the local file system ("file://...") or in HDFS ("hdfs://..."). For examples see src/main/resources/degreeSequences
+* ldbc.snb.bteronh.generator.ccPerDegree:X -- The file containing the list of avg. clustering coefficient per degree. Can be stored either in the local file system ("file://...") or in HDFS ("hdfs://..."). For examples see src/main/resources/degreeSequences For examples see src/main.resources/CCs
 
 ## Tools
 
