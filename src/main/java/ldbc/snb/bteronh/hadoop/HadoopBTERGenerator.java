@@ -53,7 +53,7 @@ public class HadoopBTERGenerator {
             } else if((realFileName = isLocalPath(fileName)) != null) {
                 return new BufferedReader(new FileReader(realFileName));
             } else {
-                throw new IOException("Invalid file URI. It must start with hdfs:// or file://");
+                throw new IOException("Invalid file URI "+fileName+". It must start with hdfs:// or file://");
             }
         }
 
@@ -163,7 +163,8 @@ public class HadoopBTERGenerator {
         if(outputFileName != null){
             outputFileName = isHDFSPath(outputFileName);
             if(outputFileName == null)  {
-                throw new IOException("Ill-formed outputFileName URI. OutputFileName must start with hdfs://");
+                throw new IOException("Ill-formed outputFileName URI"+outputFileName+". OutputFileName must start " +
+                        "with hdfs://");
             }
         } else {
             throw new IOException("You need to specify. ldbc.snb.bteronh.serializer.outputFileName");

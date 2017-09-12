@@ -1,11 +1,15 @@
 package ldbc.snb.bteroh;
 
 import javafx.util.Pair;
+import ldbc.snb.bteronh.algorithms.Algorithms;
 import ldbc.snb.bteronh.structures.BTERStats;
+import ldbc.snb.bteronh.structures.Edge;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
@@ -41,6 +45,18 @@ public class BTERStatsTest {
             assertEquals("Testing index of group "+i,expectedGroupIndexes[i],stats.getGroupIndex(i));
             assertEquals("Testing number of buckets of group "+i,expectedGroupNumBuckets[i],stats.getGroupNumBuckets(i));
             assertEquals("Testing bucket size of group "+i,expectedGroupBucketSize[i],stats.getGroupBucketSize(i));
+        }
+
+        long totalWeight = stats.getWeightPhase1()+stats.getWeightPhase2();
+
+        Random random = new Random();
+        random.setSeed(123456789L);
+        for(long i = 0; i < totalWeight; ++i) {
+            try {
+                Edge edge = Algorithms.BTERSample(stats, random);
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
         }
     }
 

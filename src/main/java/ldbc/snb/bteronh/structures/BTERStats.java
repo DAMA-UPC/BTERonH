@@ -192,7 +192,7 @@ public class BTERStats {
         }
 
         cumulativeDegrees = new double[getMaxDegree()+1];
-        cumulativeGroups[0] = getDegreeWeight(0) / (double)weightPhase2;
+        cumulativeDegrees[0] = getDegreeWeight(0) / (double)weightPhase2;
         for(int i = 1; i < (getMaxDegree()+1); ++i) {
             cumulativeDegrees[i] = Math.min(cumulativeDegrees[i-1] + getDegreeWeight(i) / (double)weightPhase2,1.0);
         }

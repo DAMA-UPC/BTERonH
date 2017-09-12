@@ -44,8 +44,16 @@ public class BTERMain {
         }
 
 
-        try {
+        System.out.println("ldbc.snb.bteronh.generator.numThreads "+conf.get("ldbc.snb.bteronh.generator.numThreads"));
+        System.out.println("ldbc.snb.bteronh.generator.numNodes "+conf.get("ldbc.snb.bteronh.generator.numNodes"));
+        System.out.println("ldbc.snb.bteronh.generator.seed "+conf.get("ldbc.snb.bteronh.generator.seed"));
+        System.out.println("ldbc.snb.bteronh.serializer.workspace "+conf.get("ldbc.snb.bteronh.serializer.workspace"));
+        System.out.println("ldbc.snb.bteronh.generator.degreeSequence "+conf.get("ldbc.snb.bteronh.generator" +
+                ".degreeSequence"));
+        System.out.println("ldbc.snb.bteronh.generator.ccPerDegree "+conf.get("ldbc.snb.bteronh.generator" +
+                ".ccPerDegree"));
 
+        try {
             System.out.println("Starting execution");
             long start = System.currentTimeMillis();
             HadoopBTERGenerator bterGenerator = new HadoopBTERGenerator(conf);

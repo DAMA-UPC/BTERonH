@@ -92,7 +92,7 @@ public class Algorithms {
 
     public static int SampleCumulative(double [] cumulative, Random random) {
         double randomDis = random.nextDouble();
-        int lowerBound = 0;
+        /*int lowerBound = 0;
         int upperBound = cumulative.length-1;
         int midPoint = (upperBound + lowerBound) / 2;
         while (upperBound >= lowerBound) {
@@ -106,6 +106,12 @@ public class Algorithms {
             midPoint = (upperBound + lowerBound) / 2;
         }
         return midPoint;
+        */
+        int res = Arrays.binarySearch(cumulative, randomDis);
+        if(res < 0) {
+            return -(res+1);
+        }
+        return res;
     }
 
     public static Edge BTERSample(BTERStats stats, Random random) throws IOException {
@@ -140,7 +146,7 @@ public class Algorithms {
     }
 
     public static long BTERSampleNodePhase2(BTERStats stats, Random random) {
-        int degree = SampleCumulative(stats.getCumulativeDegrees(),random)+1;
+        int degree = SampleCumulative(stats.getCumulativeDegrees(),random);
         double r1 = random.nextDouble();
         double r2 = random.nextDouble();
         if(r1 < stats.getDegreeWeightRatio(degree)) {
