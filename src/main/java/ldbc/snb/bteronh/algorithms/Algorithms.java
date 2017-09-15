@@ -17,9 +17,9 @@ import java.util.*;
  * Created by aprat on 14/07/16.
  */
 public class Algorithms {
-        public static int BinarySearch(ArrayList<Pair<Long,Double>> array, Long degree) {
+    public static int BinarySearch(ArrayList<Pair<Long,Double>> array, Long degree) {
 
-        int min = 0;
+        /*int min = 0;
         int max = array.size();
         while(min <= max) {
             int midPoint = (max - min) / 2 + min;
@@ -34,6 +34,21 @@ public class Algorithms {
             }
         }
         return max;
+        */
+        int pos = Collections.binarySearch(array, new Pair<Long,Double>(degree, 0.0), new Comparator<Pair<Long,
+                Double>> ( ){
+
+            @Override
+            public int compare(Pair<Long, Double> o1, Pair<Long, Double> o2) {
+                if(o1.getKey() < o2.getKey()) return -1;
+                return 1;
+            }
+        });
+
+        if(pos < 0) {
+            return -(pos+1);
+        }
+        return pos;
     }
 
     public static RandomVariateGen GetDegreeSequenceSampler(List<Integer> observedSequence, long numNodes, int seed ) {
@@ -78,7 +93,7 @@ public class Algorithms {
             } else if( pos < ccDistribution.size() - 1 ){
                 long min = ccDistribution.get(pos).getKey();
                 long max = ccDistribution.get(pos+1).getKey();
-                double ratio = (degree - min) / (max - min);
+                double ratio = (degree - min) / (double)(max - min);
                 double minCC = ccDistribution.get(pos).getValue();
                 double maxCC = ccDistribution.get(pos+1).getValue();
                 double cc_current = ratio * (maxCC - minCC ) + minCC;
@@ -92,21 +107,6 @@ public class Algorithms {
 
     public static int SampleCumulative(double [] cumulative, Random random) {
         double randomDis = random.nextDouble();
-        /*int lowerBound = 0;
-        int upperBound = cumulative.length-1;
-        int midPoint = (upperBound + lowerBound) / 2;
-        while (upperBound >= lowerBound) {
-            if (cumulative[midPoint] < randomDis) {
-                lowerBound = midPoint+1;
-            } else if (cumulative[midPoint] > randomDis){
-                upperBound = midPoint-1;
-            } else {
-                return midPoint;
-            }
-            midPoint = (upperBound + lowerBound) / 2;
-        }
-        return midPoint;
-        */
         int res = Arrays.binarySearch(cumulative, randomDis);
         if(res < 0) {
             return -(res+1);
