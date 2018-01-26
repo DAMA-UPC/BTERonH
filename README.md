@@ -31,6 +31,16 @@ You can use the BTERonH as a library using the following maven repository
     </repository>
 </repositories>
 ```
+And add the project as a dependency
+
+```   
+<dependency>                                                                                                                                                                                                   
+   <groupId>ldbc.snb</groupId>                                                                                                                                                                                  
+   <artifactId>bteronh</artifactId>                                                                                                                                                                             
+   <version>0.0.3</version>                                                                                                                                                                                     
+</dependency> 
+
+```
 
 ## Configuration
 
