@@ -1,45 +1,26 @@
-package ldbc.snb.bteronh.algorithms;
+package ldbc.snb.bteronhplus.algorithms;
 
-import javafx.util.Pair;
-import ldbc.snb.bteronh.structures.BTERStats;
-import ldbc.snb.bteronh.structures.Edge;
+import ldbc.snb.bteronhplus.structures.BTERStats;
+import ldbc.snb.bteronhplus.structures.Edge;
+import org.apache.commons.math3.util.Pair;
 import umontreal.iro.lecuyer.probdist.EmpiricalDist;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 import umontreal.iro.lecuyer.rng.LFSR113;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.*;
 
 /**
  * Created by aprat on 14/07/16.
  */
-public class Algorithms {
-    public static int BinarySearch(ArrayList<Pair<Long,Double>> array, Long degree) {
+public class BTER {
+    public static int binarySearch(ArrayList<Pair<Integer,Double>> array, Integer degree) {
 
-        /*int min = 0;
-        int max = array.size();
-        while(min <= max) {
-            int midPoint = (max - min) / 2 + min;
-            if(midPoint >= array.size()) return array.size()-1;
-            if(midPoint < 0) return 0;
-            if(array.get(midPoint).getKey() > degree ) {
-                max = midPoint - 1;
-            } else if(array.get(midPoint).getKey() < degree) {
-                min = midPoint + 1;
-            } else {
-                return midPoint;
-            }
-        }
-        return max;
-        */
-        int pos = Collections.binarySearch(array, new Pair<Long,Double>(degree, 0.0), new Comparator<Pair<Long,
+        int pos = Collections.binarySearch(array, new Pair<Integer,Double>(degree, 0.0), new Comparator<Pair<Integer,
                 Double>> ( ){
 
             @Override
-            public int compare(Pair<Long, Double> o1, Pair<Long, Double> o2) {
+            public int compare(Pair<Integer, Double> o1, Pair<Integer, Double> o2) {
                 if(o1.getKey() < o2.getKey()) return -1;
                 return 1;
             }
@@ -51,7 +32,7 @@ public class Algorithms {
         return pos;
     }
 
-    public static RandomVariateGen GetDegreeSequenceSampler(List<Integer> observedSequence, long numNodes, int seed ) {
+    public static RandomVariateGen getDegreeSequenceSampler(List<Integer> observedSequence, long numNodes, int seed) {
 
         System.out.println("Creating sampler for degree sequence generation");
         observedSequence.sort( new Comparator<Integer>() {
@@ -79,7 +60,20 @@ public class Algorithms {
         return randomVariateGen;
     }
 
-    public static double [] GenerateCCperDegree( ArrayList<Pair<Long,Double>> ccDistribution, int maxDegree) {
+    public static double [] generateCCperDegree(HashMap<Integer,Double> ccPerDegree, int maxDegree) {
+
+        ArrayList<Pair<Integer,Double>> ccDistribution = new ArrayList<Pair<Integer,Double>>();
+        for(Map.Entry<Integer,Double> entry : ccPerDegree.entrySet()) {
+            ccDistribution.add(new Pair<Integer,Double>(entry.getKey(),entry.getValue()));
+        }
+
+        Collections.sort(ccDistribution, new Comparator<Pair<Integer,Double>>() {
+
+            @Override
+            public int compare(Pair<Integer, Double> pair1, Pair<Integer, Double> pair2) {
+                return pair1.getFirst() - pair2.getFirst();
+            }
+        });
 
         System.out.println("Loading CC distribution");
         double [] cc = new double[maxDegree+1];
@@ -87,7 +81,7 @@ public class Algorithms {
         cc[1] = 0.0;
         for(int i = 2; i < maxDegree+1; ++i) {
             int degree = i;
-            int pos = Algorithms.BinarySearch(ccDistribution,(long)degree);
+            int pos = BTER.binarySearch(ccDistribution,degree);
             if(ccDistribution.get(pos).getKey() == degree || pos == (ccDistribution.size() - 1)) {
                 cc[degree] = ccDistribution.get(pos).getValue();
             } else if( pos < ccDistribution.size() - 1 ){
@@ -105,7 +99,7 @@ public class Algorithms {
 
 
 
-    public static int SampleCumulative(double [] cumulative, Random random) {
+    public static int sampleCumulative(double [] cumulative, Random random) {
         double randomDis = random.nextDouble();
         int res = Arrays.binarySearch(cumulative, randomDis);
         if(res < 0) {
@@ -114,19 +108,19 @@ public class Algorithms {
         return res;
     }
 
-    public static Edge BTERSample(BTERStats stats, Random random) throws IOException {
+    public static Edge BTERSample(BTERStats stats, Random random, long nodeIdOffset) throws IOException {
 
         long totalWeight = stats.getWeightPhase1()+stats.getWeightPhase2();
         double prob = random.nextDouble();
         if(prob < stats.getWeightPhase1()/(double)(totalWeight)) {
-            return BTERSamplePhase1(stats,random);
+            return BTERSamplePhase1(stats,random, nodeIdOffset);
         }
-        return BTERSamplePhase2(stats,random);
+        return BTERSamplePhase2(stats,random, nodeIdOffset);
     }
 
 
-    public static Edge BTERSamplePhase1(BTERStats stats, Random random) throws IOException{
-        int group = SampleCumulative(stats.getCumulativeGroups(),random);
+    public static Edge BTERSamplePhase1(BTERStats stats, Random random, long nodeIdOffset) throws IOException{
+        int group = sampleCumulative(stats.getCumulativeGroups(),random);
         double r1 = random.nextDouble();
         long offset = (stats.getGroupIndex(group) + (long)Math.floor(r1*stats.getGroupNumBuckets(group))*stats.getGroupBucketSize(group));
         double r2 = random.nextDouble();
@@ -136,17 +130,17 @@ public class Algorithms {
         if( secondNode >= firstNode )  {
             secondNode+=1;
         }
-        return new Edge(firstNode,secondNode);
+        return new Edge(nodeIdOffset+firstNode,nodeIdOffset+secondNode);
     }
 
-    public static Edge BTERSamplePhase2(BTERStats stats, Random random) throws IOException {
+    public static Edge BTERSamplePhase2(BTERStats stats, Random random, long nodeIdOffset) throws IOException {
         long firstNode = BTERSampleNodePhase2(stats, random);
         long secondNode = BTERSampleNodePhase2(stats, random);
-        return new Edge(firstNode, secondNode);
+        return new Edge(nodeIdOffset+firstNode, nodeIdOffset+secondNode);
     }
 
     public static long BTERSampleNodePhase2(BTERStats stats, Random random) {
-        int degree = SampleCumulative(stats.getCumulativeDegrees(),random);
+        int degree = sampleCumulative(stats.getCumulativeDegrees(),random);
         double r1 = random.nextDouble();
         double r2 = random.nextDouble();
         if(r1 < stats.getDegreeWeightRatio(degree)) {

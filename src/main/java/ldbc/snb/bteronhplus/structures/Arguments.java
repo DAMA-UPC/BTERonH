@@ -1,4 +1,4 @@
-package ldbc.snb.bteronh.structures;
+package ldbc.snb.bteronhplus.structures;
 
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.Parameter;

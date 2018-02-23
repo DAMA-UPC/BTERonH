@@ -1,13 +1,11 @@
-package ldbc.snb.bteroh;
+package ldbc.snb.bterohplus;
 
-import javafx.util.Pair;
-import ldbc.snb.bteronh.algorithms.Algorithms;
-import ldbc.snb.bteronh.structures.BTERStats;
-import ldbc.snb.bteronh.structures.Edge;
+import ldbc.snb.bteronhplus.algorithms.BTER;
+import ldbc.snb.bteronhplus.structures.BTERStats;
+import ldbc.snb.bteronhplus.structures.Edge;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -33,7 +31,7 @@ public class BTERStatsTest {
         int[] expectedDegreeIndex = {0,18,0,7,11,14,14,15,15,15,15,15,15,16,16,16,16,17,17,17,17,17};
 
         BTERStats stats = new BTERStats();
-        stats.initialize(degreeSequence.length, observedDegreeSequence, ccPerDegree);
+        stats.initialize(observedDegreeSequence, ccPerDegree,0);
         assertEquals("Testing max degree",21,stats.getMaxDegree());
         for(int i = 0; i < stats.getMaxDegree(); ++i){
             assertEquals("Testing number of bulk nodes of degree "+i,expectedDegreeNBulk[i],stats.getDegreeNBulk(i));
@@ -53,7 +51,7 @@ public class BTERStatsTest {
         random.setSeed(123456789L);
         for(long i = 0; i < totalWeight; ++i) {
             try {
-                Edge edge = Algorithms.BTERSample(stats, random);
+                Edge edge = BTER.BTERSample(stats, random,0);
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }

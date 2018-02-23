@@ -1,19 +1,16 @@
-package ldbc.snb.bteronh.structures;
+package ldbc.snb.bteronhplus.structures;
 
-import javafx.util.Pair;
-import ldbc.snb.bteronh.algorithms.Algorithms;
-import umontreal.iro.lecuyer.randvar.RandomVariateGen;
+import ldbc.snb.bteronhplus.algorithms.BTER;
 
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * Created by aprat on 14/07/16.
  */
-public class BTERStats {
+public class BTERStats implements Serializable {
 
     int maxDegree = Integer.MIN_VALUE;
 
@@ -21,7 +18,7 @@ public class BTERStats {
     long [] i_g = null; //index of group in degree sequence
     long[] n_g = null; //number of buckets in group
     long[] b_g = null; //size of bucket in group
-    double [] w_g = null; //weight of buckets in group
+    double [] w_g = null; //externalWeightPerDegree of buckets in group
 
     //Phase 2 data
     long [] nfill_d = null;
@@ -39,33 +36,41 @@ public class BTERStats {
     long weightPhase1;
     long weightPhase2;
 
-    public void initialize(long numNodes, ArrayList<Integer> observedDegreeSequence, ArrayList<Pair<Long,Double>> observedCCPerDegree, int seed, Consumer<Long> continuation) {
+
+    // BTERPlus specific stats
+    double [] w_d_external = null;
+
+
+    public void initialize(HashMap<Integer,Long> degrees,
+                           HashMap<Integer,Double>  observedCCPerDegree, long totalExternalDegree ) {
+
+        System.out.println("Initializing BTER stats");
 
         maxDegree = Integer.MIN_VALUE;
-        RandomVariateGen randomVariateGen = Algorithms.GetDegreeSequenceSampler(observedDegreeSequence, numNodes, seed);
-
-        System.out.println("Generating Degree Sequence");
-        HashMap<Integer,Long> degrees = new HashMap<Integer,Long>();
-        for(long i = 0; i < numNodes; ++i) {
-            int degree = (int)randomVariateGen.nextDouble();
-            degrees.compute(degree,(k,v)-> v == null ? 1 : v + 1 );
-            maxDegree = degree > maxDegree ? degree : maxDegree;
-            if(i % 1000000 == 0) {
-                continuation.accept(i);
+        for(Integer degree : degrees.keySet()) {
+            if (degree > maxDegree ) {
+                maxDegree = degree;
             }
         }
 
-        double [] ccPerDegree = Algorithms.GenerateCCperDegree(observedCCPerDegree,maxDegree);
-        initialize(numNodes, degrees,ccPerDegree);
+        double [] ccPerDegree = BTER.generateCCperDegree(observedCCPerDegree,maxDegree);
+        initialize(degrees,ccPerDegree,totalExternalDegree);
     }
 
-    public void initialize(long numNodes, HashMap<Integer,Long> degrees, double [] ccPerDegree) {
+    public void initialize(HashMap<Integer,Long> degrees, double [] ccPerDegree, long totalExternalDegree) {
 
         if(maxDegree == Integer.MIN_VALUE) {
             maxDegree = Integer.MIN_VALUE;
-            for (Integer key : degrees.keySet()) {
-                maxDegree = key > maxDegree ? key : maxDegree;
+            for (Map.Entry<Integer,Long> entry : degrees.entrySet()) {
+                maxDegree = entry.getKey() > maxDegree ? entry.getKey() : maxDegree;
+                System.out.println(entry.getValue());
             }
+        }
+
+
+        long numNodes = 0L;
+        for (Map.Entry<Integer,Long> entry : degrees.entrySet()) {
+            numNodes += entry.getValue();
         }
 
         i_g = new long[maxDegree+1];
@@ -80,11 +85,13 @@ public class BTERStats {
         r_d = new double[maxDegree+1];
         n_d = new long[maxDegree+1];
         i_d = new long[maxDegree+1];
+        w_d_external = new double[maxDegree+1];
         for(int i = 0; i < maxDegree+1; ++i) {
             i_g[i] = 0;
             b_g[i] = 0;
             n_g[i] = i+1;
             w_g[i] = 0;
+
 
             nfill_d[i] = 0;
             nbulk_d[i] = 0;
@@ -95,6 +102,8 @@ public class BTERStats {
             r_d[i] = 0;
             i_d[i] = 0;
             n_d[i] = 0;
+
+            w_d_external[i] = 0;
         }
 
         // initializing n_d
@@ -152,17 +161,34 @@ public class BTERStats {
                 wbulk_d[i] = 0.5*nbulk_d[i]*(i-dInternalPrevious);
                 w_g[(int)g] = b_g[(int)g]*0.5*n_g[(int)g]*(n_g[(int)g]-1)*Math.log(1/(1.0-p));
                 nFillPrevious = (b_g[(int)g]*n_g[(int)g]) - nbulk_d[i];
+
             } else {
                 wbulk_d[i] = 0;
             }
             w_d[i] = wfill_d[i] + wbulk_d[i];
+            w_d_external[i] = (long)(w_d[i])*(0.5); // contains the max amount of degree that can go to external
+            // used to
             r_d[i] = wfill_d[i] / w_d[i];
+        }
+
+        long allocatedExternalDegree = 0L;
+        for(int i = maxDegree; i >= 0; --i) {
+            if(allocatedExternalDegree < totalExternalDegree) {
+                long remain = totalExternalDegree - allocatedExternalDegree;
+                long toSubstract = Math.min(remain, (long)w_d_external[i]);
+                w_d_external[i] = toSubstract;
+                allocatedExternalDegree+=w_d_external[i];
+                w_d[i] -= w_d_external[i];
+                r_d[i] = wfill_d[i] / w_d[i];
+            } else {
+                w_d_external[i] = 0;
+            }
         }
 
         long [] newi_g = new long[(int)g+1];
         long [] newn_g = new long[(int)g+1]; //number of buckets in group
         long [] newb_g = new long[(int)g+1]; //size of bucket in group
-        double [] neww_g = new double[(int)g+1]; //weight of buckets in group
+        double [] neww_g = new double[(int)g+1]; //externalWeightPerDegree of buckets in group
         for(int i = 0; i < g+1; ++i) {
             newi_g[i] = i_g[i];
             newn_g[i] = n_g[i];
@@ -248,6 +274,15 @@ public class BTERStats {
 
     public long getWeightPhase2() {
         return weightPhase2;
+    }
+
+    public double getExternalDegree( int degree ) {
+        return w_d_external[degree];
+    }
+
+    public double[] getExternalDegree() {
+        return w_d_external;
+
     }
 
 }
