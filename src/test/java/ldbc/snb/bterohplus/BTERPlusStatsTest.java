@@ -10,19 +10,12 @@ import java.util.HashMap;
 
 public class BTERPlusStatsTest {
 
-    public Boolean checkDouble(double a , double b, double error)  {
+   /* public Boolean checkDouble(double a , double b, double error)  {
         return (a-b) < error;
     }
 
     @Test
     public void testCumProbabilities(){
-
-        /*String model = "10|0:40|1:10|2:10|3:10|4:10\n" + // 40 // 40
-                       "10|0:10|1:40|2:10|3:10|4:10\n" + // 40 // 40
-                       "10|0:10|1:10|2:40|3:10|4:10\n" + // 40 // 40
-                       "10|0:10|1:10|2:10|3:40|4:10\n" + // 40 // 50
-                       "10|0:10|1:10|2:10|3:10|4:40\n"; // 40 // 50
-                       */
 
         double sizesRatios[] = new double[5];
 
@@ -86,5 +79,6 @@ public class BTERPlusStatsTest {
 
     }
 
+    */
 
 }

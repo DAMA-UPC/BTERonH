@@ -24,7 +24,7 @@ public class BTERPlusStats implements Serializable {
     public void initialize(HashMap<Integer,Long> degrees, double [] degreeBudget, int blockIndex, BlockModel
             blockModel ) {
 
-        long numNodes = 0L;
+       /* long numNodes = 0L;
         for(Map.Entry<Integer,Long> entry : degrees.entrySet()) {
             int degree = entry.getKey();
             long count = entry.getValue();
@@ -91,6 +91,7 @@ public class BTERPlusStats implements Serializable {
             }
 
         }
+        */
 
     }
 }

@@ -3,6 +3,8 @@ package ldbc.snb.bterohplus;
 import ldbc.snb.bteronhplus.algorithms.BTER;
 import ldbc.snb.bteronhplus.algorithms.Partitioning;
 import ldbc.snb.bteronhplus.structures.BlockModel;
+import ldbc.snb.bteronhplus.structures.RandomVariateStreamer;
+import ldbc.snb.bteronhplus.structures.SuperNode;
 import org.apache.commons.math3.util.Pair;
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,7 +12,7 @@ import org.junit.Test;
 import java.util.*;
 
 public class PartitioningTest {
-
+/*
     int getBlock(int blockSize, int nodeId) {
         return nodeId / blockSize;
     }
@@ -89,12 +91,16 @@ public class PartitioningTest {
         BlockModel blockModel = new BlockModel(blockSizesRatio, degreesRatio );
 
         ArrayList<Integer> degreeSequence = new ArrayList<Integer>(nodeDegrees.values());
-        List<HashMap<Integer,Long>>
-                degreesPerBlock = Partitioning.partition(blockModel,
-                                                         BTER.getDegreeSequenceSampler(degreeSequence,
+        List<List<SuperNode>>
+                nodesPerBlock = Partitioning.partition(blockModel,
+                                                         new RandomVariateStreamer(BTER.getDegreeSequenceSampler(degreeSequence,
                                                                                        numNodes,
-                                                                                       123456789),
+                                                                                       123456789)),
                                                          numNodes);
+
+
+        List<HashMap<Integer,Long>> degreesPerBlock = Partitioning.getDegreesPerBlock(nodesPerBlock);
+
         for (int i = 0; i < numBlocks; ++i) {
             long blockDegree = 0;
             long blockNodes = 0;
@@ -111,5 +117,6 @@ public class PartitioningTest {
         }
 
     }
+    */
 
 }

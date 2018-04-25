@@ -1,6 +1,9 @@
 package ldbc.snb.bteronhplus.algorithms;
 
 import ldbc.snb.bteronhplus.structures.BlockModel;
+import ldbc.snb.bteronhplus.structures.SuperNode;
+import ldbc.snb.bteronhplus.structures.SuperNodeCluster;
+import ldbc.snb.bteronhplus.structures.SuperNodeStreamer;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 
 import java.util.*;
@@ -12,13 +15,15 @@ public class Partitioning {
                                 double currentBlockSize[],
                                 double currentBlockDegree[] ) {
 
+        int numBlocks = blockModel.getNumBlocks();
         double sizeScore = 0.0;
         double degreeScore = 0.0;
-        for(int i = 0; i < blockModel.blockSizes.length; ++i) {
+        for(int i = 0; i < numBlocks; ++i) {
+            BlockModel.ModelEntry entry = blockModel.getEntries().get(i);
             double currentSize = currentBlockSize[i];
             double currentDegree = currentBlockDegree[i];
-            sizeScore += Math.pow(blockModel.blockSizes[i]-currentSize,2);
-            degreeScore += Math.pow(blockModel.totalBlockDegree[i]-currentDegree,2);
+            sizeScore += Math.pow(entry.size-currentSize,2);
+            degreeScore += Math.pow(entry.totalDegree-currentDegree,2);
         }
         return sizeScore+degreeScore;
     }
@@ -28,54 +33,61 @@ public class Partitioning {
                                 double currentBlockDegree[],
                                 double totalObservedNodes,
                                 double totalObservedDegree,
-                                int degree,
+                                long size,
+                                long degree,
                                 int block) {
 
+        int numBlocks = blockModel.getNumBlocks();
         double sizeScore = 0.0;
         double degreeScore = 0.0;
-        for(int i = 0; i < blockModel.blockSizes.length; ++i) {
+        for(int i = 0; i < numBlocks; ++i) {
+            BlockModel.ModelEntry entry = blockModel.getEntries().get((long)i);
             double currentSize = currentBlockSize[i]*totalObservedNodes;
             double currentDegree = currentBlockDegree[i]*totalObservedDegree;
             if(block == i) {
-                currentSize+=1;
+                currentSize+=size;
                 currentDegree+=degree;
             }
-            double normalizedCurrentSize = currentSize / (totalObservedNodes + 1);
+            double normalizedCurrentSize = currentSize / (totalObservedNodes + size);
             double normalizedCurrentDegree = currentDegree / (totalObservedDegree + degree);
-            sizeScore += Math.pow(blockModel.blockSizes[i]-normalizedCurrentSize,2);
-            degreeScore += Math.pow(blockModel.totalBlockDegree[i]-normalizedCurrentDegree,2);
+            sizeScore += Math.pow(entry.size-normalizedCurrentSize,2);
+            degreeScore += Math.pow(entry.totalDegree-normalizedCurrentDegree,2);
         }
         return sizeScore+degreeScore;
     }
 
-    public static List<HashMap<Integer,Long>> partition(BlockModel blockModel, RandomVariateGen sampler, long
-            numNodes) {
+    public static Map<Long,SuperNodeCluster> partition(BlockModel blockModel,
+                                                   SuperNodeStreamer streamer,
+                                                   long numNodes) {
 
-        ArrayList<HashMap<Integer,Long>> degreesPerBlock = new ArrayList<HashMap<Integer,Long>>();
-        for(int i = 0; i < blockModel.blockSizes.length; ++i) {
-            degreesPerBlock.add(new HashMap<Integer,Long>());
+        List<List<SuperNode>> superNodesPerBlock = new ArrayList<List<SuperNode>>();
+        int numBlocks = blockModel.getNumBlocks();
+        for(int i = 0; i < numBlocks; ++i) {
+            superNodesPerBlock.add(new ArrayList<SuperNode>());
         }
 
-        double currentBlockSize[] = new double[blockModel.blockSizes.length];
+        double currentBlockSize[] = new double[numBlocks];
         Arrays.fill(currentBlockSize, 0.0);
-        double currentBlockDegree[] = new double[blockModel.blockSizes.length];
+        double currentBlockDegree[] = new double[numBlocks];
         Arrays.fill(currentBlockDegree, 0.0);
 
 
-        double currentScore = score(blockModel, currentBlockSize, currentBlockDegree);
+        //double currentScore = score(blockModel, currentBlockSize, currentBlockDegree);
         long totalObservedNodes = 0L;
         long totalObservedDegree = 0L;
-        for(long i = 0; i < numNodes; ++i) {
-            int nextDegree = (int)sampler.nextDouble();
+        int count = 1;
+        while( totalObservedNodes < numNodes) {
+            SuperNode nextSuperNode = streamer.next();
             int bestBlock = 0;
             double bestScore = Double.MAX_VALUE;
-            for(int j = 0; j < blockModel.blockSizes.length; ++j) {
+            for(int j = 0; j < numBlocks; ++j) {
                 double nextScore = score(blockModel,
                                          currentBlockSize,
                                          currentBlockDegree,
                                          totalObservedNodes,
                                          totalObservedDegree,
-                                         nextDegree,
+                                         nextSuperNode.getSize(),
+                                         nextSuperNode.getInternalDegree() + nextSuperNode.getExternalDegree(),
                                          j);
 
                 if(nextScore < bestScore) {
@@ -84,58 +96,53 @@ public class Partitioning {
                 }
             }
 
-            for(int j = 0; j < blockModel.blockSizes.length; ++j) {
+            for(int j = 0; j < numBlocks; ++j) {
                 currentBlockSize[j] = currentBlockSize[j]*totalObservedNodes;
                 currentBlockDegree[j] = currentBlockDegree[j]*totalObservedDegree;
             }
-            currentBlockSize[bestBlock]++;
-            currentBlockDegree[bestBlock]+=nextDegree;
-            degreesPerBlock.get(bestBlock).merge(nextDegree,1L,Long::sum);
-            totalObservedDegree+=nextDegree;
-            totalObservedNodes+=1L;
-            for(int j = 0; j < blockModel.blockSizes.length; ++j) {
+
+            currentBlockSize[bestBlock]+=nextSuperNode.getSize();
+            currentBlockDegree[bestBlock]+=nextSuperNode.getInternalDegree()+nextSuperNode.getExternalDegree();
+            superNodesPerBlock.get(bestBlock).add(nextSuperNode);
+            totalObservedDegree+=nextSuperNode.getInternalDegree()+nextSuperNode.getExternalDegree();
+            totalObservedNodes+=nextSuperNode.getSize();
+            for(int j = 0; j < numBlocks; ++j) {
                 currentBlockSize[j] = currentBlockSize[j]/totalObservedNodes;
                 currentBlockDegree[j] = currentBlockDegree[j]/totalObservedDegree;
             }
-            currentScore = score(blockModel, currentBlockSize, currentBlockDegree);
+            //currentScore = score(blockModel, currentBlockSize, currentBlockDegree);
 
-            if( i % 10000 == 0) {
-                System.out.println("Distributed "+i+" nodes out of "+numNodes);
+            if( count % 1000 == 0) {
+                System.out.println("Distributed "+count+" superNodes amounting "+totalObservedNodes+" out of " +
+                        numNodes);
             }
+            count++;
         }
 
+        long id = 0;
+        Map<Long,SuperNodeCluster> clusters = new HashMap<Long,SuperNodeCluster>();
+        for(List<SuperNode> children : superNodesPerBlock) {
+            if(children.size() > 0) {
+                BlockModel.ModelEntry entry = blockModel.getEntries().get(id);
+                double ratio = entry.externalDegree / entry.totalDegree;
+                clusters.put(id, new SuperNodeCluster(id, children, ratio));
+            }
+            id++;
+        }
+        return clusters;
+    }
+
+    public static List<HashMap<Long,Long>> getDegreesPerBlock(List<List<SuperNode>> superNodes) {
+        List<HashMap<Long,Long>> degreesPerBlock = new ArrayList<HashMap<Long,Long>>();
+        for(int i = 0; i < superNodes.size(); ++i) {
+            degreesPerBlock.add(new HashMap<>());
+        }
+
+        for(int i = 0; i < superNodes.size(); ++i) {
+            for(SuperNode node : superNodes.get(i)) {
+                degreesPerBlock.get(i).merge(node.getExternalDegree()+node.getInternalDegree(), 1L, Long::sum);
+            }
+        }
         return degreesPerBlock;
     }
-
-    public static void partitionToBlockSizes(List<HashMap<Integer,Long>> partition, double [] sizes, double []
-            degrees) {
-        assert sizes.length == degrees.length && partition.size() == sizes.length;
-
-        long numNodes = 0;
-        long numDegree = 0;
-        for(HashMap<Integer,Long> block : partition ) {
-            for ( Map.Entry<Integer,Long> entry : block.entrySet()) {
-                numDegree += entry.getKey()*entry.getValue();
-                numNodes += entry.getValue();
-            }
-        }
-
-        Arrays.fill(sizes,0.0);
-        Arrays.fill(degrees, 0.0);
-
-        int numBlocks = partition.size();
-        for (int i = 0; i < numBlocks; ++i) {
-            long blockNodes = 0;
-            long blockDegree = 0;
-            HashMap<Integer,Long> counts = partition.get(i);
-            for ( Map.Entry<Integer, Long> entry : counts.entrySet()) {
-                blockNodes += entry.getValue();
-                blockDegree += entry.getValue()*entry.getKey();
-            }
-            sizes[i] = blockNodes / (double) numNodes;
-            degrees[i] = blockDegree / (double) numDegree;
-        }
-
-    }
-
 }

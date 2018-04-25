@@ -6,7 +6,7 @@ import org.junit.Test;
 
 public class BlockModelTest {
 
-    private void checkExternal(BlockModel blockModel, int index, double expected) {
+   /* private void checkExternal(BlockModel blockModel, int index, double expected) {
         double total = 0;
         for (int i = 0; i < blockModel.degree[index].length; ++i) {
             if(i != index) {
@@ -66,4 +66,5 @@ public class BlockModelTest {
         checkExternal(blockModel, 3, 0.15);
 
     }
+    */
 }

@@ -48,7 +48,7 @@ public class BTERMain {
 
     public static void main(String [] args) throws Exception {
 
-        System.out.println("Generating edges");
+       /* System.out.println("Generating edges");
         Configuration conf = new Configuration();
         conf.setInt("ldbc.snb.bteronh.generator.numThreads",1);
         conf.setLong("ldbc.snb.bteronh.generator.numNodes",10000);
@@ -97,7 +97,7 @@ public class BTERMain {
         }
 
 
-        /** Printing Options **/
+        // Printing Options
         System.out.println("ldbc.snb.bteronh.generator.numThreads "+conf.get("ldbc.snb.bteronh.generator.numThreads"));
         System.out.println("ldbc.snb.bteronh.generator.numNodes "+conf.get("ldbc.snb.bteronh.generator.numNodes"));
         System.out.println("ldbc.snb.bteronh.generator.seed "+conf.get("ldbc.snb.bteronh.generator.seed"));
@@ -333,6 +333,8 @@ public class BTERMain {
 
         long end = System.currentTimeMillis();
         System.out.println("Execution time: "+(end-start)/1000.0+" second");
+        */
+
 
     }
 }
