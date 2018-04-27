@@ -72,7 +72,6 @@ public class Partitioning {
         Arrays.fill(currentBlockDegree, 0.0);
 
 
-        //double currentScore = score(blockModel, currentBlockSize, currentBlockDegree);
         long totalObservedNodes = 0L;
         long totalObservedDegree = 0L;
         int count = 1;
@@ -110,7 +109,6 @@ public class Partitioning {
                 currentBlockSize[j] = currentBlockSize[j]/totalObservedNodes;
                 currentBlockDegree[j] = currentBlockDegree[j]/totalObservedDegree;
             }
-            //currentScore = score(blockModel, currentBlockSize, currentBlockDegree);
 
             if( count % 1000 == 0) {
                 System.out.println("Distributed "+count+" superNodes amounting "+totalObservedNodes+" out of " +
@@ -132,17 +130,4 @@ public class Partitioning {
         return clusters;
     }
 
-    public static List<HashMap<Long,Long>> getDegreesPerBlock(List<List<SuperNode>> superNodes) {
-        List<HashMap<Long,Long>> degreesPerBlock = new ArrayList<HashMap<Long,Long>>();
-        for(int i = 0; i < superNodes.size(); ++i) {
-            degreesPerBlock.add(new HashMap<>());
-        }
-
-        for(int i = 0; i < superNodes.size(); ++i) {
-            for(SuperNode node : superNodes.get(i)) {
-                degreesPerBlock.get(i).merge(node.getExternalDegree()+node.getInternalDegree(), 1L, Long::sum);
-            }
-        }
-        return degreesPerBlock;
-    }
 }

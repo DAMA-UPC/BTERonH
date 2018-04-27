@@ -143,9 +143,6 @@ public class SuperNodeCluster implements SuperNode {
                 pos2 = children.size() - 1;
             }
             
-            /*if(pos1 == pos2) {
-                System.out.println("test");
-            }*/
             long node1 = children.get(pos1).sampleNode(random, offset + offsets[pos1]);
             long node2 = children.get(pos2).sampleNode(random, offset + offsets[pos2]);
             return new Edge(node1, node2);

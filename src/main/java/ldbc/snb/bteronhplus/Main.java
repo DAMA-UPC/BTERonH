@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 
-public class TestMain {
+public class Main {
 
     public static class Arguments {
 

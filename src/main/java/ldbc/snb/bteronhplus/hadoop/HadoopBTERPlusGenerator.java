@@ -1,8 +1,5 @@
 package ldbc.snb.bteronhplus.hadoop;
 
-import ldbc.snb.bteronhplus.algorithms.BTER;
-import ldbc.snb.bteronhplus.structures.BTERPlusStats;
-import ldbc.snb.bteronhplus.structures.BTERStats;
 import ldbc.snb.bteronhplus.structures.Edge;
 import ldbc.snb.bteronhplus.tools.FileTools;
 import org.apache.hadoop.conf.Configuration;
@@ -12,7 +9,6 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -30,7 +26,7 @@ public class HadoopBTERPlusGenerator {
         public void map(LongWritable key, Text value, Context context)
                 throws IOException, InterruptedException {
 
-            int threadId = Integer.parseInt(value.toString());
+            /*int threadId = Integer.parseInt(value.toString());
 
             Configuration conf = context.getConfiguration();
             String bterPlusStatsFile = conf.get("ldbc.snb.bteronh.generator.bterplusstats");
@@ -93,6 +89,7 @@ public class HadoopBTERPlusGenerator {
                     context.setStatus("Generated "+i+" edges out of "+blockSize+" in mapper "+threadId);
                 }
             }
+            */
         }
     }
 
@@ -103,7 +100,7 @@ public class HadoopBTERPlusGenerator {
         @Override
         public void reduce(LongWritable tail, Iterable<LongWritable> valueSet,
                            Context context) throws IOException, InterruptedException {
-            Set<Long> neighbors = new HashSet<Long>();
+            /*Set<Long> neighbors = new HashSet<Long>();
             for ( LongWritable head : valueSet ) {
                 neighbors.add(head.get());
             }
@@ -112,6 +109,7 @@ public class HadoopBTERPlusGenerator {
                 //String str = new String(tail + " " + head + "\n");
                 context.write(tail,new LongWritable(head));
             }
+            */
         }
     }
 

@@ -17,34 +17,6 @@ public class SuperNodeUtils {
                                                                     int level
                                                                    ) {
         if(level == blockModelHierarchy.size()) {
-            /*List<SuperNode> childrenClusters = new ArrayList<SuperNode>();
-            for(Long child : children ) {
-                SuperNodeCluster cluster = clusters.get((int)(long)child);
-                if(cluster != null) {
-                    childrenClusters.add(cluster);
-                }
-            }
-            
-            if(childrenClusters.size() == 0) {
-                return null;
-            }
-
-            BlockModel blockModel = blockModelHierarchy.get(level-1);
-            long internalDegree = 0;
-            long totalDegree = 0;
-
-            for(SuperNode child1 : childrenClusters) {
-                BlockModel.ModelEntry entry = blockModel.getEntries().get(child1.getId());
-                totalDegree += entry.totalDegree;
-                for(SuperNode child2 : childrenClusters) {
-                   internalDegree += entry.degree.get(child2.getId());
-                }
-            }
-
-            double externalRatio = 1.0 - internalDegree / (double)(totalDegree);
-
-            return new SuperNodeCluster(id, childrenClusters, externalRatio);
-            */
             return clusters.get(id);
 
         } else {
