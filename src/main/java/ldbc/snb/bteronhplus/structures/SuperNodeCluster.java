@@ -1,5 +1,7 @@
 package ldbc.snb.bteronhplus.structures;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class SuperNodeCluster implements SuperNode {
@@ -13,6 +15,12 @@ public class SuperNodeCluster implements SuperNode {
     private double          sampleNodeExternalCumProbability[];
     private double          sampleInterNodeCumProbability[];
     private double          sampleNodeInternalCumProbability[];
+    
+    private int             sampleNodeExternalIndices[];
+    private int             sampleInterNodeIndices[];
+    private int             sampleNodeInternalIndices[];
+    
+    
     private double          intraNodeEdgeProb;
 
     public SuperNodeCluster(long id,
@@ -22,10 +30,10 @@ public class SuperNodeCluster implements SuperNode {
         this.id = id;
         this.children = children;
         this.offsets = new long[children.size()];
-
-        sampleNodeExternalCumProbability = new double[children.size()];
-        sampleInterNodeCumProbability = new double[children.size()];
-        sampleNodeInternalCumProbability = new double[children.size()];
+    
+        this.sampleNodeExternalIndices = new int[children.size()];
+        this.sampleInterNodeIndices = new int[children.size()];
+        this.sampleNodeInternalIndices = new int[children.size()];
 
         offsets[0] = 0;
         for(int i = 1; i < offsets.length; ++i) {
@@ -55,29 +63,58 @@ public class SuperNodeCluster implements SuperNode {
            externalDegreeBudget-=toRemove;
            totalToExternal+=toRemove;
         }
-
-        sampleNodeExternalCumProbability[0] = 0.0;
-        for(int i = 1; i < children.size(); ++i) {
-            sampleNodeExternalCumProbability[i] = sampleNodeExternalCumProbability[i-1] + externalEdges[i-1] /
-                    (double)totalToExternal;
-        }
-
-        sampleInterNodeCumProbability[0] = 0.0;
-        for(int i = 1; i < children.size(); ++i) {
-            SuperNode child = children.get(i-1);
-            long childInternalDegree = child.getExternalDegree()-externalEdges[i-1];
-            sampleInterNodeCumProbability[i] = sampleInterNodeCumProbability[i-1] + childInternalDegree /
-                    (double)(totalDegree-externalDegree-childrenInternalDegree);
+        externalDegree=totalToExternal;
+    
+        int numExternalNonZero = 0;
+        int numInterNodeNonZero = 0;
+        int numInternalNonZero = 0;
+        for(int i = 0; i < children.size(); ++i) {
+            if(externalEdges[i] > 0) {
+                sampleNodeExternalIndices[numExternalNonZero] = i;
+                numExternalNonZero++;
+            }
+            if(children.get(i).getExternalDegree()-externalEdges[i] > 0) {
+                sampleInterNodeIndices[numInterNodeNonZero] = i;
+                numInterNodeNonZero++;
+            }
+            if(children.get(i).getInternalDegree() > 0) {
+                sampleNodeInternalIndices[numInternalNonZero] = i;
+                numInternalNonZero++;
+            }
         }
     
-        sampleNodeInternalCumProbability[0] = 0.0;
-        for(int i = 1; i < children.size(); ++i) {
-            SuperNode child = children.get(i-1);
-            long childInternalDegree = child.getInternalDegree();
-            sampleNodeInternalCumProbability[i] = sampleNodeInternalCumProbability[i-1] + childInternalDegree /
-                (double)childrenInternalDegree;
+        sampleNodeExternalCumProbability = new double[numExternalNonZero];
+        sampleInterNodeCumProbability = new double[numInterNodeNonZero];
+        sampleNodeInternalCumProbability = new double[numInternalNonZero];
+
+        if(numExternalNonZero > 0) {
+            sampleNodeExternalCumProbability[0] = 0.0;
+            for (int i = 1; i < numExternalNonZero; ++i) {
+                sampleNodeExternalCumProbability[i] = sampleNodeExternalCumProbability[i - 1] +
+                    externalEdges[sampleNodeExternalIndices[i - 1]] /
+                        (double) externalDegree;
+            }
         }
 
+        if(numInterNodeNonZero > 0) {
+            sampleInterNodeCumProbability[0] = 0.0;
+            for (int i = 1; i < numInterNodeNonZero; ++i) {
+                SuperNode child = children.get(sampleInterNodeIndices[i - 1]);
+                long childInternalDegree = child.getExternalDegree() - externalEdges[sampleInterNodeIndices[i - 1]];
+                sampleInterNodeCumProbability[i] = sampleInterNodeCumProbability[i - 1] + childInternalDegree /
+                    (double) (totalDegree - externalDegree - childrenInternalDegree);
+            }
+        }
+    
+        if(numInternalNonZero > 0) {
+            sampleNodeInternalCumProbability[0] = 0.0;
+            for (int i = 1; i < numInternalNonZero; ++i) {
+                SuperNode child = children.get(sampleNodeInternalIndices[i - 1]);
+                long childInternalDegree = child.getInternalDegree();
+                sampleNodeInternalCumProbability[i] = sampleNodeInternalCumProbability[i - 1] +
+                    childInternalDegree / (double) childrenInternalDegree;
+            }
+        }
     }
 
 
@@ -102,7 +139,7 @@ public class SuperNodeCluster implements SuperNode {
     }
 
     @Override
-    public Edge sampleEdge(Random random, long offset) {
+    public boolean sampleEdge(FileWriter writer, Random random, long offset) throws IOException {
         
         double prob = random.nextDouble();
         if(prob < intraNodeEdgeProb) {
@@ -118,7 +155,8 @@ public class SuperNodeCluster implements SuperNode {
                 pos1 = children.size() - 1;
             }
     
-            return children.get(pos1).sampleEdge(random, offset + offsets[pos1]);
+            int index = sampleNodeInternalIndices[pos1];
+            return children.get(index).sampleEdge(writer, random, offset + offsets[index]);
     
         } else {
             double prob1 = random.nextDouble();
@@ -142,10 +180,13 @@ public class SuperNodeCluster implements SuperNode {
             if (pos2 >= children.size()) {
                 pos2 = children.size() - 1;
             }
-            
-            long node1 = children.get(pos1).sampleNode(random, offset + offsets[pos1]);
-            long node2 = children.get(pos2).sampleNode(random, offset + offsets[pos2]);
-            return new Edge(node1, node2);
+    
+            int index1 = sampleInterNodeIndices[pos1];
+            int index2 = sampleInterNodeIndices[pos2];
+            long node1 = children.get(index1).sampleNode(random, offset + offsets[index1]);
+            long node2 = children.get(index2).sampleNode(random, offset + offsets[index2]);
+            writer.write(node1+"\t"+node2+"\n");
+            return true;
         }
 
     }
@@ -167,6 +208,17 @@ public class SuperNodeCluster implements SuperNode {
         if(pos >= children.size()) {
             pos = children.size() - 1;
         }
-        return children.get(pos).sampleNode(random, offset + offsets[pos]);
+        int index = sampleNodeExternalIndices[pos];
+        return children.get(index).sampleNode(random, offset + offsets[index]);
+    }
+    
+    @Override
+    public void dumpInternalEdges(FileWriter writer, long offset) throws IOException {
+        int index = 0;
+        for(SuperNode child : children) {
+            child.dumpInternalEdges(writer, offsets[index] + offset);
+            index++;
+        }
+        
     }
 }

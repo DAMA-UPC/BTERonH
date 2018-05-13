@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Created by aprat on 17/08/16.
  */
-public class Arguments {
+public class Properties {
     public static class Property {
         private String property;
         private String value;

@@ -2,6 +2,8 @@ package ldbc.snb.bteronhplus.structures;
 
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Random;
 
 public class RandomVariateStreamer implements SuperNodeStreamer {
@@ -37,13 +39,18 @@ public class RandomVariateStreamer implements SuperNodeStreamer {
         }
 
         @Override
-        public Edge sampleEdge(Random random, long offset) {
-            return null;
+        public boolean sampleEdge(FileWriter writer, Random random, long offset) throws IOException {
+            return false;
         }
 
         @Override
         public long sampleNode(Random random, long offset) {
             return 0;
+        }
+        
+        @Override
+        public void dumpInternalEdges(FileWriter writer, long offset) {
+        
         }
     }
 

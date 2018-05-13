@@ -81,6 +81,7 @@ public class Main {
         }
 
         CommunityStreamer communityStreamer = new CommunityStreamer(graphStats);
+        //CorePeripheryCommunityStreamer communityStreamer = new CorePeripheryCommunityStreamer(graphStats);
         Map<Long,SuperNodeCluster>  partition = Partitioning.partition(blockModelHierarchy.getLast(),
                                                                        communityStreamer,
                                                                        arguments.graphSize);
@@ -91,21 +92,12 @@ public class Main {
     
         System.out.println("Writting community edges");
         FileWriter outputFile = new FileWriter(arguments.outputFileName);
+    
 
-        int offset = 0;
-        int totalDegree = 0;
-        for (SuperNodeCluster parent : partition.values()) {
-            for(SuperNode node : parent.getChildren()) {
-                totalDegree += node.getExternalDegree() + node.getInternalDegree();
-                CommunityStreamer.Community community = (CommunityStreamer.Community) node;
-                for (Edge edge : community.getEdges()) {
-                    outputFile.write((offset + edge.getHead()) + "\t" + (offset + edge.getTail()) + "\n");
-                }
-                offset += node.getSize();
-            }
-        }
-
+        root.dumpInternalEdges(outputFile,0);
+        long totalDegree = (long)(root.getInternalDegree() + root.getExternalDegree());
         totalDegree /=2;
+        totalDegree *=1.1;
     
         System.out.println("Writting external edges");
         System.out.println("Total Number of expected edges: "+totalDegree);
@@ -114,10 +106,9 @@ public class Main {
         random.setSeed(12345L);
         for(int i = 0; i < totalDegree; ++i) {
 
-            Edge edge = root.sampleEdge(random,0);
-            if(edge != null) {
+            boolean generated = root.sampleEdge(outputFile,random,0);
+            if(generated) {
                 numExternalEdges++;
-                outputFile.write((edge.getHead())+"\t"+(edge.getTail())+"\n");
             }
         }
 

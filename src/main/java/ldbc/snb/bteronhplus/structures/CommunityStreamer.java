@@ -70,7 +70,6 @@ public class CommunityStreamer implements SuperNodeStreamer {
 
             List<Edge> edges = new ArrayList<Edge>();
 
-            int numEdgesCreated = 0;
             for(int i = 0; i < stubs.length; ++i) {
                 for(int j = i+1; j < stubs.length; ++j) {
                     if(stubs[i].degreeLeft > 0 && stubs[j].degreeLeft > 0) {
@@ -80,7 +79,6 @@ public class CommunityStreamer implements SuperNodeStreamer {
                         stubs[j].degreeLeft--;
                         stubs[j].degreeUsed++;
                         edges.add(edge);
-                        numEdgesCreated++;
                     }
                 }
             }
@@ -243,77 +241,6 @@ public class CommunityStreamer implements SuperNodeStreamer {
 
         public List<Double> getDegrees() {
             return degrees;
-        }
-    }
-
-    public static class Community implements SuperNode {
-        private int         id;
-        private int         numNodes;
-        private List<Edge>  edges;
-        private int         excessDegree[];
-        private double      excessDegreeProbs[];
-        private int         internalDegree = 0;
-        private int         externalDegree = 0;
-
-        public Community(int id, int numNodes, List<Edge> edges, int excessDegree[]) {
-            this.id           = id;
-            this.numNodes     = numNodes;
-            this.edges        = edges;
-            this.excessDegree = excessDegree;
-            this.internalDegree = edges.size()*2;
-            for(int i = 0; i < excessDegree.length; ++i) {
-                this.externalDegree += excessDegree[i];
-            }
-            this.excessDegreeProbs = new double[numNodes];
-            excessDegreeProbs[0] = 0.0;
-            for(int i = 1; i < numNodes; ++i) {
-                excessDegreeProbs[i] = excessDegreeProbs[i-1] + excessDegree[i-1] / (double)externalDegree;
-            }
-
-        }
-
-        public List<Edge> getEdges() {
-            return edges;
-        }
-
-        public int[] getExcessDegree() {
-            return excessDegree;
-        }
-
-        @Override
-        public long getId() {
-            return id;
-        }
-
-        @Override
-        public long getSize() {
-            return numNodes;
-        }
-
-        @Override
-        public long getInternalDegree() {
-            return internalDegree;
-        }
-
-        @Override
-        public long getExternalDegree() {
-            return externalDegree;
-        }
-
-        @Override
-        public Edge sampleEdge(Random random, long offset) {
-            return null;
-        }
-
-        @Override
-        public long sampleNode(Random random, long offset) {
-
-            int pos = Arrays.binarySearch(excessDegreeProbs,random.nextDouble());
-
-            if(pos < 0) {
-                pos  = -(pos+1);
-            }
-            return offset + pos;
         }
     }
 

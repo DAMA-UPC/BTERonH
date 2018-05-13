@@ -117,6 +117,7 @@ public class Partitioning {
             count++;
         }
 
+        System.out.println("Number of nodes generated "+totalObservedNodes);
         long id = 0;
         Map<Long,SuperNodeCluster> clusters = new HashMap<Long,SuperNodeCluster>();
         for(List<SuperNode> children : superNodesPerBlock) {

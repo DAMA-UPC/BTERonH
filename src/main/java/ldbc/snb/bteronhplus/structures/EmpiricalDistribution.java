@@ -16,7 +16,7 @@ public class EmpiricalDistribution {
 
     RandomVariateGen randomVariateGen = null;
 
-    public EmpiricalDistribution(String filename, Configuration conf) {
+    public EmpiricalDistribution(String filename, Configuration conf, double min) {
 
         // reading the sequence from the file
         ArrayList<Double> sequence = new ArrayList<Double>();
@@ -26,7 +26,10 @@ public class EmpiricalDistribution {
             String line;
             line = reader.readLine();
             while(line!=null) {
-                sequence.add(Double.parseDouble(line));
+                double next = Double.parseDouble(line);
+                if(next >= min) {
+                    sequence.add(next);
+                }
                 line = reader.readLine();
             }
         } catch (IOException e){

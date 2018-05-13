@@ -14,7 +14,7 @@ import java.util.Set;
 public class GraphStats {
 
     private HashMap<Integer, EmpiricalDistribution> degreeDistribution = null;
-    private HashMap<Integer, EmpiricalDistribution> ccDistributions = null;
+    private HashMap<Integer, EmpiricalDistribution> ccPerDegree = null;
     private EmpiricalDistribution communitySizeDistribution = null;
     private HashMap<Integer,Double> communityDensityMap = null;
     private Set<Integer> communitySizes = null;
@@ -28,8 +28,8 @@ public class GraphStats {
 
         Configuration conf  = new Configuration();
         degreeDistribution  = new HashMap<Integer, EmpiricalDistribution>();
-        ccDistributions     = new HashMap<Integer, EmpiricalDistribution>();
-        communitySizeDistribution = new EmpiricalDistribution(communitySizeSequenceFile, conf);
+        ccPerDegree         = new HashMap<Integer, EmpiricalDistribution>();
+        communitySizeDistribution = new EmpiricalDistribution(communitySizeSequenceFile, conf, 0);
         communityDensityMap = new HashMap<Integer,Double>();
         communitySizes      = new HashSet<Integer>();
 
@@ -45,10 +45,6 @@ public class GraphStats {
                 for (int i = 1; i < numbers.length; ++i) {
                     observedSequence.add(Double.parseDouble(numbers[i]));
                 }
-
-                /*if(numbers.length <= 2) { // This is needed because EmpiricalDist requires at least 2 observations
-                    observedSequence.add(Double.parseDouble(numbers[1]));
-                }*/
 
                 degreeDistribution.put(degree, new EmpiricalDistribution(observedSequence));
                 line = reader.readLine();
@@ -70,12 +66,11 @@ public class GraphStats {
                 for (int i = 1; i < numbers.length; ++i) {
                     observedSequence.add(Double.parseDouble(numbers[i]));
                 }
-
-                if(numbers.length <= 2) { // This is needed because EmpiricalDist requires at least 2 observations
-                    observedSequence.add(Double.parseDouble(numbers[1]));
+        
+                if(observedSequence.size() == 1) {
+                    observedSequence.add(observedSequence.get(0));
                 }
-
-                ccDistributions.put(degree, new EmpiricalDistribution(observedSequence));
+                ccPerDegree.put(degree, new EmpiricalDistribution(observedSequence));
                 line = reader.readLine();
             }
         } catch (IOException e ) {
@@ -101,6 +96,7 @@ public class GraphStats {
             System.exit(1);
         }
 
+        // Loading community size distribution
         try {
             BufferedReader reader = FileTools.getFile(communitySizeSequenceFile, conf);
             String line;
@@ -125,21 +121,10 @@ public class GraphStats {
     }
 
     public EmpiricalDistribution getCCPerDegreeDistribution(int degree) {
-        EmpiricalDistribution distribution =  ccDistributions.get(degree);
-        if(distribution == null) {
-            for (int i = degree-1; i >= 0; --i) {
-                distribution = ccDistributions.get(i);
-                if(distribution != null) {
-                    ccDistributions.put(degree,distribution);
-                    break;
-                }
-            }
-        }
-
-        return distribution;
+        return ccPerDegree.get(degree);
     }
 
-    public Double getCommunityDensity(int size) {
+    public double getCommunityDensity(int size) {
         Double density = communityDensityMap.get(size);
         if(density == null) {
             for (int i = size-1; i >= 0; --i) {
