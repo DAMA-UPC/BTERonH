@@ -42,6 +42,9 @@ public class Main {
 
         @Parameter(names = {"-l", "--levels"}, description = "The number of community structure levels " )
         public int levels = 2;
+    
+        @Parameter(names = {"-m", "--modules"}, description = "The modules file prefix", required = true)
+        public String modulesPrefix;
 
 
     }
@@ -80,8 +83,10 @@ public class Main {
            blockModelHierarchy.addLast(BlockModel.identity());
         }
 
-        CommunityStreamer communityStreamer = new CommunityStreamer(graphStats);
+        //CommunityStreamer communityStreamer = new CommunityStreamer(graphStats);
         //CorePeripheryCommunityStreamer communityStreamer = new CorePeripheryCommunityStreamer(graphStats);
+        RealCommunityStreamer communityStreamer = new RealCommunityStreamer(graphStats, arguments.modulesPrefix+
+            "communities", arguments.modulesPrefix+"degreemap");
         Map<Long,SuperNodeCluster>  partition = Partitioning.partition(blockModelHierarchy.getLast(),
                                                                        communityStreamer,
                                                                        arguments.graphSize);
@@ -97,7 +102,6 @@ public class Main {
         root.dumpInternalEdges(outputFile,0);
         long totalDegree = (long)(root.getInternalDegree() + root.getExternalDegree());
         totalDegree /=2;
-        totalDegree *=1.1;
     
         System.out.println("Writting external edges");
         System.out.println("Total Number of expected edges: "+totalDegree);
