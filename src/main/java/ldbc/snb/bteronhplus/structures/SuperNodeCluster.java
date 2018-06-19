@@ -35,40 +35,40 @@ public class SuperNodeCluster implements SuperNode {
             }
         });
         
-        this.offsets = new long[children.size()];
+        this.offsets = new long[this.children.size()];
     
-        this.sampleNodeExternalIndices = new int[children.size()];
+        this.sampleNodeExternalIndices = new int[this.children.size()];
 
         offsets[0] = 0;
         for(int i = 1; i < offsets.length; ++i) {
-            offsets[i] = offsets[i-1] + children.get(i-1).getSize();
+            offsets[i] = offsets[i-1] + this.children.get(i-1).getSize();
         }
 
         long tempInternalDegree = 0;
         long tempExternalDegree = 0;
-        for(int i = 0; i < children.size(); ++i) {
-            SuperNode node = children.get(i);
+        for(int i = 0; i < this.children.size(); ++i) {
+            SuperNode node = this.children.get(i);
             tempInternalDegree+=node.getInternalDegree();
             tempExternalDegree+=node.getExternalDegree();
             size+=node.getSize();
         }
         long totalDegree = tempInternalDegree+tempExternalDegree;
         double finalRatio = Math.min((totalDegree - tempInternalDegree )/ (double)totalDegree, externalRatio);
-        long externalEdges[] = new long[children.size()];
+        long externalEdges[] = new long[this.children.size()];
         Arrays.fill(externalEdges, 0);
         
         /*externalDegree = (long)(totalDegree*finalRatio);
-        for(int i = 0; i < children.size(); i++) {
-            externalEdges[i] = children.get(i).getExternalDegree();
+        for(int i = 0; i < this.children.size(); i++) {
+            externalEdges[i] = this.children.get(i).getExternalDegree();
         }*/
         
         
         long externalDegreeBudget = Math.round(totalDegree*finalRatio);
         long totalToExternal = 0;
         
-        for(int i = 0; i < children.size() && externalDegreeBudget > 0; i++) {
-            SuperNode child = children.get(i);
-            long toRemove = Math.min(Math.round(child.getExternalDegree()*0.25),externalDegreeBudget);
+        for(int i = 0; i < this.children.size() && externalDegreeBudget > 0; i++) {
+            SuperNode child = this.children.get(i);
+            long toRemove = Math.min(Math.round(child.getExternalDegree()*0.5),externalDegreeBudget);
             externalEdges[i] = toRemove;
             externalDegreeBudget-=toRemove;
             totalToExternal+=toRemove;
@@ -80,7 +80,7 @@ public class SuperNodeCluster implements SuperNode {
         intraNodeEdgeProb = intraDegree / (double)(internalDegree);
     
         int numExternalNonZero = 0;
-        for(int i = 0; i < children.size(); ++i) {
+        for(int i = 0; i < this.children.size(); ++i) {
             if(externalEdges[i] > 0) {
                 sampleNodeExternalIndices[numExternalNonZero] = i;
                 numExternalNonZero++;
@@ -88,9 +88,9 @@ public class SuperNodeCluster implements SuperNode {
         }
     
         sampleNodeExternalCumProbability = new double[numExternalNonZero];
-        sampleNodeInternalProbability = new double[children.size()];
-        sampleInterNodeProbability = new double[children.size()];
-        interDegree = new long[children.size()];
+        sampleNodeInternalProbability = new double[this.children.size()];
+        sampleInterNodeProbability = new double[this.children.size()];
+        interDegree = new long[this.children.size()];
 
         if(numExternalNonZero > 0) {
             sampleNodeExternalCumProbability[0] = 0.0;
@@ -102,7 +102,7 @@ public class SuperNodeCluster implements SuperNode {
         }
     
         for (int i = 0; i < sampleInterNodeProbability.length; ++i) {
-            SuperNode child = children.get(i);
+            SuperNode child = this.children.get(i);
             long childInternalDegree = child.getExternalDegree() - externalEdges[i];
             interDegree[i] = childInternalDegree;
             sampleInterNodeProbability[i] = (internalDegree - intraDegree) > 0 ? childInternalDegree /
@@ -110,7 +110,7 @@ public class SuperNodeCluster implements SuperNode {
         }
     
         for (int i = 0; i < sampleNodeInternalProbability.length; ++i) {
-            SuperNode child = children.get(i);
+            SuperNode child = this.children.get(i);
             long childInternalDegree = child.getInternalDegree();
             sampleNodeInternalProbability[i] = childInternalDegree / (double) tempInternalDegree;
         }
@@ -123,7 +123,7 @@ public class SuperNodeCluster implements SuperNode {
             throw new RuntimeException("Found inconcistency between children and current degree "+currentDegree+" " +
                                            ""+childrenDegree);
         }
-    
+        
     }
 
 
@@ -152,8 +152,8 @@ public class SuperNodeCluster implements SuperNode {
         
         // Creating intra node edges
         long intraNodeEdges = Math.round(intraNodeEdgeProb * numEdges);
-        for(int i = 0; i < children.size(); ++i) {
-            SuperNode child = children.get(i);
+        for(int i = 0; i < this.children.size(); ++i) {
+            SuperNode child = this.children.get(i);
             long numEdgesToCreate = (Math.round(intraNodeEdges * sampleNodeInternalProbability[i]));
             child.sampleEdges(writer, random, numEdgesToCreate, offset + offsets[i]);
         }
@@ -161,7 +161,6 @@ public class SuperNodeCluster implements SuperNode {
         long degreeBudget[] = Arrays.copyOf(interDegree, interDegree.length);
         
         boolean finished = false;
-        
         while(!finished) {
             finished = true;
             for (int i = 0; i < degreeBudget.length; ++i) {
@@ -178,18 +177,52 @@ public class SuperNodeCluster implements SuperNode {
             }
         }
         
-        long remainingEdges = 0;
+    
+        int indices[] = new int[children.size()];
+        int numNonZeros = 0;
+        long remainingDegree = 0;
         for(int i = 0; i < degreeBudget.length; ++i)  {
-            remainingEdges+=degreeBudget[i];
+            remainingDegree+=degreeBudget[i];
+            if(degreeBudget[i] != 0L) {
+                indices[numNonZeros] = i;
+                numNonZeros++;
+            }
         }
-        remainingEdges /= 2;
         
-        for(int i = 0; i < remainingEdges; ++i) {
-            int first = random.nextInt(children.size());
-            int second = random.nextInt(children.size());
-            long node1 = children.get(first).sampleNode(random, offset + offsets[first]);
-            long node2 = children.get(second).sampleNode(random, offset + offsets[second]);
-            writer.write(node1 + "\t" + node2 + "\n");
+        if(numNonZeros > 0) {
+            double cumulative[] = new double[numNonZeros];
+            cumulative[0] = 0.0;
+            for (int i = 1; i < numNonZeros; ++i) {
+                double currentProb = degreeBudget[indices[i - 1]] / (double) remainingDegree;
+                cumulative[i] = currentProb + cumulative[i - 1];
+            }
+    
+    
+            long numEdgesRemaining = remainingDegree / 2;
+            for (int i = 0; i < numEdgesRemaining; ++i) {
+        
+                int pos = Arrays.binarySearch(cumulative, random.nextDouble());
+        
+                if (pos < 0) {
+                    pos = -(pos + 1);
+                    pos--;
+                }
+        
+                int first = indices[pos];
+        
+                pos = Arrays.binarySearch(cumulative, random.nextDouble());
+        
+                if (pos < 0) {
+                    pos = -(pos + 1);
+                    pos--;
+                }
+        
+                int second = indices[pos];
+        
+                long node1 = children.get(first).sampleNode(random, offset + offsets[first]);
+                long node2 = children.get(second).sampleNode(random, offset + offsets[second]);
+                writer.write(node1 + "\t" + node2 + "\n");
+            }
         }
         
     }

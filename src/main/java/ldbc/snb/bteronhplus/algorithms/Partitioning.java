@@ -41,15 +41,16 @@ public class Partitioning {
                 currentRatio = Math.min((currentTotalDegree - currentInternalDegree)/ (double)
                                             currentTotalDegree, expectedRatio);
             }
-            double normalizedCurrentSize = currentSize / (double)(totalObservedNodes + size);
-            double normalizedCurrentDegree = currentTotalDegree / (double)(totalObservedDegree + internalDegree +
-                externalDegree);
-            //sizeScore += Math.pow(entry.size-normalizedCurrentSize,2);
+            //double normalizedCurrentSize = currentSize / (double)(totalObservedNodes + size);
+            /*double normalizedCurrentDegree = currentTotalDegree / (double)(totalObservedDegree + internalDegree +
+                externalDegree);*/
     
-            double degreeScore = Math.pow(entry.totalDegree-normalizedCurrentDegree,2);
-            double ratioScore = Math.pow(expectedRatio-currentRatio,2);
-            //score += (degreeScore+ratioScore) / 2.0;
-            score += degreeScore*ratioScore;
+            //double degreeScore = Math.pow(entry.totalDegree-normalizedCurrentDegree,2);
+            double degreeScore = Math.pow((entry.totalDegree*totalObservedNodes-currentTotalDegree)
+                                              /totalObservedNodes,2);
+            double ratioScore = Math.pow((expectedRatio-currentRatio),2);
+            score += (0.25*degreeScore+0.75*ratioScore) / 2.0;
+            //score += degreeScore*ratioScore;
         }
         return score;
     }
@@ -103,15 +104,16 @@ public class Partitioning {
                                          j);
                 
                 
-                double improvement = nextScore - currentScore;
-                double factor = 1.0 - currentBlockSize[j] / (double)(entry.size*numNodes);
-                improvement = factor*improvement;
-
-                if(improvement > bestImprovement) {
-                    bestScore = nextScore;
-                    bestBlock = j;
-                    bestImprovement = improvement;
-                }
+                    double improvement = nextScore - currentScore;
+                    double size_factor = 1.0 - (currentBlockSize[j]+nextSuperNode.getSize()) / (double) (entry.size *
+                        numNodes);
+                    improvement = size_factor * improvement;
+    
+                    if (improvement < bestImprovement) {
+                        bestScore = nextScore;
+                        bestBlock = j;
+                        bestImprovement = improvement;
+                    }
             }
             currentScore = bestScore;
     
