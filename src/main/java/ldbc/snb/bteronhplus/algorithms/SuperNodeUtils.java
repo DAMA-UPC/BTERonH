@@ -40,8 +40,8 @@ public class SuperNodeUtils {
                 return null;
             }
 
-            double internalDegree = 0;
-            double totalDegree = 0;
+            long internalDegree = 0;
+            long totalDegree = 0;
 
             for(SuperNode child1 : childrenClusters) {
                 BlockModel.ModelEntry entry = blockModel.getEntries().get(child1.getId());

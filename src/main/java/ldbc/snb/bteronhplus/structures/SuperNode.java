@@ -13,10 +13,8 @@ public interface SuperNode {
 
     long getId();
 
-    boolean sampleEdge(FileWriter writer, Random random, long offset) throws IOException;
+    void sampleEdges(FileWriter writer, Random random, long numEdges, long offset) throws IOException;
 
     long sampleNode(Random random, long offset);
-    
-    void dumpInternalEdges(FileWriter writer, long offset) throws IOException;
     
 }

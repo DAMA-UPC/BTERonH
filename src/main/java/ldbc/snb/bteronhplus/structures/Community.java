@@ -68,8 +68,11 @@ public class Community implements SuperNode {
     }
     
     @Override
-    public boolean sampleEdge(FileWriter writer, Random random, long offset) throws IOException {
-        return false;
+    public void sampleEdges(FileWriter writer, Random random, long numEdges, long offset) throws IOException {
+    
+        for(Edge edge : edges) {
+            writer.write((offset + edge.getTail()) + "\t" + (offset + edge.getHead()) + "\n");
+        }
     }
     
     @Override
@@ -81,14 +84,12 @@ public class Community implements SuperNode {
             pos  = -(pos+1);
             pos--;
         }
+        
+        if(pos == -1) {
+            pos = 0;
+        }
     
         return offset + excessDegreeIndices[pos];
     }
     
-    @Override
-    public void dumpInternalEdges(FileWriter writer, long offset) throws IOException {
-        for(Edge edge : edges) {
-            writer.write((offset + edge.getTail()) + "\t" + (offset + edge.getHead()) + "\n");
-        }
-    }
 }

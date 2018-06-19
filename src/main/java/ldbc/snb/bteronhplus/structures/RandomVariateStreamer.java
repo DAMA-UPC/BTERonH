@@ -39,19 +39,14 @@ public class RandomVariateStreamer implements SuperNodeStreamer {
         }
 
         @Override
-        public boolean sampleEdge(FileWriter writer, Random random, long offset) throws IOException {
-            return false;
+        public void sampleEdges(FileWriter writer, Random random, long numEdges, long offset) throws IOException {
         }
 
         @Override
         public long sampleNode(Random random, long offset) {
             return 0;
         }
-        
-        @Override
-        public void dumpInternalEdges(FileWriter writer, long offset) {
-        
-        }
+    
     }
 
     RandomVariateGen randomVariateGen;

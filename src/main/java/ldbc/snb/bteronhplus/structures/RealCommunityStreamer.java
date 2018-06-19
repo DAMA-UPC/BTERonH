@@ -9,9 +9,11 @@ import java.util.*;
 
 public class RealCommunityStreamer implements SuperNodeStreamer {
     
+    private EmpiricalDistribution sizeDistribution;
     private HashMap<Integer, List<Community>> models;
     private GraphStats stats;
     private Random random;
+    private long totalDegreeStreamed = 0;
     
     public RealCommunityStreamer(GraphStats stats, String communitiesFile, String degreeFile)  {
         random = new Random();
@@ -19,8 +21,11 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
         HashMap<Integer, Integer> degrees =  new HashMap<Integer, Integer>();
         Configuration conf  = new Configuration();
         this.models = new HashMap<Integer, List<Community>>();
+        long totalObservedEdges = 0;
+        long totalExcessDegree = 0;
         try {
     
+            ArrayList<Double> communitySizes = new ArrayList<Double>();
             BufferedReader reader = FileTools.getFile(degreeFile, conf);
             String line;
             line = reader.readLine();
@@ -31,6 +36,7 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
             }
             reader.close();
             
+            int counter = 0;
             reader = FileTools.getFile(communitiesFile, conf);
             line = reader.readLine();
             while (line != null) {
@@ -58,6 +64,8 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
                     head = idMap.get(head);
                     
                     edges.add(new Edge(tail, head));
+    
+                    totalObservedEdges++;
                 }
     
                 Map<Integer, Integer > degree = new HashMap<Integer, Integer>();
@@ -70,8 +78,13 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
                 int excessDegree[] = new int[size];
                 for(Map.Entry<Integer,Integer> entry : degree.entrySet()) {
                     Integer nodeDegree = localDegrees.get(entry.getKey());
-                    excessDegree[entry.getKey()] = (int) Math.max(0.0, nodeDegree - entry
-                        .getValue());
+                    int localId = entry.getKey();
+                    excessDegree[localId] = nodeDegree - entry
+                        .getValue();
+                    if(excessDegree[localId] < 0) {
+                        throw new RuntimeException("Node with excess degree < 0");
+                    }
+                    totalExcessDegree+=excessDegree[localId];
                 }
                 
                 List<Community> communities = models.get(size);
@@ -79,10 +92,14 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
                     communities = new ArrayList<Community>();
                     models.put(size, communities);
                 }
-                communities.add(new Community(0, size, edges, excessDegree));
+                communities.add(new Community(counter, size, edges, excessDegree));
+                communitySizes.add((double)size);
                 line = reader.readLine();
+                counter++;
             }
             reader.close();
+            sizeDistribution = new EmpiricalDistribution(communitySizes);
+            System.out.println("Total degree in communities models: "+(totalObservedEdges*2+totalExcessDegree));
         } catch (IOException e ) {
             e.printStackTrace();
             System.exit(1);
@@ -91,10 +108,15 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
     
     @Override
     public SuperNode next() {
-        EmpiricalDistribution sizeDistribution = stats.getCommunitySizeDistribution();
+        //EmpiricalDistribution sizeDistribution = stats.getCommunitySizeDistribution();
         int nextSize = (int)sizeDistribution.getNext();
         List<Community> communities = models.get(nextSize);
         Community community = communities.get(random.nextInt(communities.size()));
+        totalDegreeStreamed += community.getInternalDegree()+community.getExternalDegree();
         return community;
+    }
+    
+    public long getTotalDegreeStreamed() {
+        return totalDegreeStreamed;
     }
 }

@@ -53,6 +53,12 @@ public class Main {
 
         Arguments arguments = new Arguments();
         new JCommander(arguments, args);
+    
+        System.out.println("Degree file: "+arguments.degreesFile);
+        System.out.println("CCS file: "+arguments.ccsFile);
+        System.out.println("Communities file: "+arguments.communitiesfile);
+        System.out.println("Density file: "+arguments.densityFileName);
+        System.out.println("Modules prefix: "+arguments.modulesPrefix);
 
         GraphStats graphStats = new GraphStats(arguments.degreesFile,
                                                arguments.ccsFile,
@@ -90,7 +96,7 @@ public class Main {
         Map<Long,SuperNodeCluster>  partition = Partitioning.partition(blockModelHierarchy.getLast(),
                                                                        communityStreamer,
                                                                        arguments.graphSize);
-
+        
         System.out.println("Building Hiearchy");
         SuperNodeCluster root = SuperNodeUtils.buildSuperNodeClusterHierarchy(blockModelHierarchy,
                                                                               partition);
@@ -99,7 +105,7 @@ public class Main {
         FileWriter outputFile = new FileWriter(arguments.outputFileName);
     
 
-        root.dumpInternalEdges(outputFile,0);
+        //root.dumpInternalEdges(outputFile,0);
         long totalDegree = (long)(root.getInternalDegree() + root.getExternalDegree());
         totalDegree /=2;
     
@@ -108,15 +114,8 @@ public class Main {
         int numExternalEdges = 0;
         Random random = new Random();
         random.setSeed(12345L);
-        for(int i = 0; i < totalDegree; ++i) {
+        root.sampleEdges(outputFile,random,totalDegree,0);
 
-            boolean generated = root.sampleEdge(outputFile,random,0);
-            if(generated) {
-                numExternalEdges++;
-            }
-        }
-
-        System.out.println("Number of external edges "+numExternalEdges);
         outputFile.close();
     }
 }
