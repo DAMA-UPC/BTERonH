@@ -69,6 +69,7 @@ public class SuperNodeCluster implements SuperNode {
         for(int i = 0; i < this.children.size() && externalDegreeBudget > 0; i++) {
             SuperNode child = this.children.get(i);
             long toRemove = Math.min(Math.round(child.getExternalDegree()*0.5),externalDegreeBudget);
+            toRemove = Math.min(toRemove, externalDegreeBudget / 3);
             externalEdges[i] = toRemove;
             externalDegreeBudget-=toRemove;
             totalToExternal+=toRemove;

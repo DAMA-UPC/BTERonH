@@ -462,11 +462,11 @@ public class CorePeripheryCommunityStreamer implements SuperNodeStreamer {
         
     }
 
-    public CorePeripheryCommunityStreamer(GraphStats graphStats) {
+    public CorePeripheryCommunityStreamer(GraphStats graphStats, Random random) {
+        this.random = random;
         communityModels = new HashMap<Integer, List<CommunityModel>>();
         communities = new ArrayList<Community>();
         this.graphStats = graphStats;
-        this.random = new Random();
         this.nextCommunityId = 0;
 
         for(Integer size : graphStats.getCommunitySizes()) {

@@ -88,11 +88,14 @@ public class Main {
         } else {
            blockModelHierarchy.addLast(BlockModel.identity());
         }
+    
+        Random random = new Random();
+        random.setSeed(12345L);
 
         //CommunityStreamer communityStreamer = new CommunityStreamer(graphStats);
-        //CorePeripheryCommunityStreamer communityStreamer = new CorePeripheryCommunityStreamer(graphStats);
+        //CorePeripheryCommunityStreamer communityStreamer = new CorePeripheryCommunityStreamer(graphStats,random);
         RealCommunityStreamer communityStreamer = new RealCommunityStreamer(graphStats, arguments.modulesPrefix+
-            "communities", arguments.modulesPrefix+"degreemap");
+            "communities", arguments.modulesPrefix+"degreemap", random);
         Map<Long,SuperNodeCluster>  partition = Partitioning.partition(blockModelHierarchy.getLast(),
                                                                        communityStreamer,
                                                                        arguments.graphSize);
@@ -112,8 +115,6 @@ public class Main {
         System.out.println("Writting external edges");
         System.out.println("Total Number of expected edges: "+totalDegree);
         int numExternalEdges = 0;
-        Random random = new Random();
-        random.setSeed(12345L);
         root.sampleEdges(outputFile,random,totalDegree,0);
 
         outputFile.close();

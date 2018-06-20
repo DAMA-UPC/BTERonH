@@ -15,8 +15,8 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
     private Random random;
     private long totalDegreeStreamed = 0;
     
-    public RealCommunityStreamer(GraphStats stats, String communitiesFile, String degreeFile)  {
-        random = new Random();
+    public RealCommunityStreamer(GraphStats stats, String communitiesFile, String degreeFile, Random random)  {
+        this.random = random;
         this.stats = stats;
         HashMap<Integer, Integer> degrees =  new HashMap<Integer, Integer>();
         Configuration conf  = new Configuration();
