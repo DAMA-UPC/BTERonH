@@ -14,6 +14,7 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
     private GraphStats stats;
     private Random random;
     private long totalDegreeStreamed = 0;
+    private long totalSizeStreamed = 0;
     
     public RealCommunityStreamer(GraphStats stats, String communitiesFile, String degreeFile, Random random)  {
         this.random = random;
@@ -23,6 +24,7 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
         this.models = new HashMap<Integer, List<Community>>();
         long totalObservedEdges = 0;
         long totalExcessDegree = 0;
+        long totalObservedNodes = 0;
         try {
     
             ArrayList<Double> communitySizes = new ArrayList<Double>();
@@ -94,11 +96,13 @@ public class RealCommunityStreamer implements SuperNodeStreamer {
                 }
                 communities.add(new Community(counter, size, edges, excessDegree));
                 communitySizes.add((double)size);
+                totalObservedNodes+=size;
                 line = reader.readLine();
                 counter++;
             }
             reader.close();
             sizeDistribution = new EmpiricalDistribution(communitySizes);
+            System.out.println("Total size in communities models: "+totalObservedNodes);
             System.out.println("Total degree in communities models: "+(totalObservedEdges*2+totalExcessDegree));
         } catch (IOException e ) {
             e.printStackTrace();

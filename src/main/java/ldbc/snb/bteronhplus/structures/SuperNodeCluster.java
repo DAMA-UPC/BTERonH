@@ -1,5 +1,7 @@
 package ldbc.snb.bteronhplus.structures;
 
+import org.apache.commons.math3.util.Pair;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -16,17 +18,20 @@ public class SuperNodeCluster implements SuperNode {
     private double          sampleNodeInternalProbability[];
     private double          sampleInterNodeProbability[];
     private long            interDegree[];
-    
     private int             sampleNodeExternalIndices[];
-    
-    
     private double          intraNodeEdgeProb;
+    
+    private double          expectedRatio = 0.0;
 
     public SuperNodeCluster(long id,
                             List<SuperNode> children,
                             double externalRatio
                             ) {
         this.id = id;
+        this.expectedRatio = externalRatio;
+        if(id == 0) {
+            System.out.println();
+        }
         this.children = new ArrayList<SuperNode>(children);
         this.children.sort( new Comparator<SuperNode>() {
             @Override
@@ -44,32 +49,47 @@ public class SuperNodeCluster implements SuperNode {
             offsets[i] = offsets[i-1] + this.children.get(i-1).getSize();
         }
 
+        long tempInternalZeroExternalDegree = 0;
         long tempInternalDegree = 0;
         long tempExternalDegree = 0;
         for(int i = 0; i < this.children.size(); ++i) {
             SuperNode node = this.children.get(i);
-            tempInternalDegree+=node.getInternalDegree();
-            tempExternalDegree+=node.getExternalDegree();
+            tempInternalDegree += node.getInternalDegree();
+            tempExternalDegree += node.getExternalDegree();
+            if(node.getExternalDegree() == 0) {
+                tempInternalZeroExternalDegree += node.getInternalDegree();
+            }
             size+=node.getSize();
         }
+        
+        if(id == 19) {
+            System.out.println();
+        }
         long totalDegree = tempInternalDegree+tempExternalDegree;
-        double finalRatio = Math.min((totalDegree - tempInternalDegree )/ (double)totalDegree, externalRatio);
+        double finalRatio = Math.min((totalDegree - tempInternalDegree )/ (double)(totalDegree), externalRatio);
+        boolean special = false;
+        if(externalRatio == 0.0 && tempExternalDegree > 0) {
+            finalRatio = (totalDegree - tempInternalDegree )/ (double)(totalDegree);
+            special = true;
+        }
         long externalEdges[] = new long[this.children.size()];
         Arrays.fill(externalEdges, 0);
         
-        /*externalDegree = (long)(totalDegree*finalRatio);
-        for(int i = 0; i < this.children.size(); i++) {
-            externalEdges[i] = this.children.get(i).getExternalDegree();
-        }*/
-        
-        
-        long externalDegreeBudget = Math.round(totalDegree*finalRatio);
+        long externalDegreeBudget = (long)(totalDegree*finalRatio);
+        /*double zeroExternalRatio = tempInternalZeroExternalDegree / (double)tempInternalDegree;
+        externalDegreeBudget -= externalDegreeBudget*zeroExternalRatio;*/
         long totalToExternal = 0;
         
         for(int i = 0; i < this.children.size() && externalDegreeBudget > 0; i++) {
             SuperNode child = this.children.get(i);
-            long toRemove = Math.min(Math.round(child.getExternalDegree()*0.5),externalDegreeBudget);
-            toRemove = Math.min(toRemove, externalDegreeBudget / 3);
+            long toRemove = 0;
+            if(!special) {
+                toRemove = Math.min((long)(child.getExternalDegree()*0.5),externalDegreeBudget);
+                //toRemove = Math.min(toRemove, externalDegreeBudget / 3);
+                
+            } else {
+                toRemove = Math.min((long)(child.getExternalDegree()),externalDegreeBudget);
+            }
             externalEdges[i] = toRemove;
             externalDegreeBudget-=toRemove;
             totalToExternal+=toRemove;
@@ -159,7 +179,34 @@ public class SuperNodeCluster implements SuperNode {
             child.sampleEdges(writer, random, numEdgesToCreate, offset + offsets[i]);
         }
         
-        long degreeBudget[] = Arrays.copyOf(interDegree, interDegree.length);
+    
+        ArrayList<Pair<Integer,Long>> interDegrees = new ArrayList<Pair<Integer,Long>>();
+        for(int i = 0; i < interDegree.length; ++i) {
+            interDegrees.add(new Pair<Integer,Long>(i, interDegree[i]));
+        }
+        
+        interDegrees.sort(new Comparator<Pair<Integer,Long>>() {
+    
+            @Override
+            public int compare(Pair<Integer, Long> pair1, Pair<Integer, Long> pair2) {
+                if( pair1.getValue() > pair2.getValue()) return -1;
+                if( pair1.getValue() == pair2.getValue()) return 0;
+                return 1;
+            }
+            
+        });
+    
+    
+        long degreeBudget[] = new long[interDegrees.size()];
+        int indices[] = new int[interDegrees.size()];
+        
+        for(int i = 0; i  < interDegrees.size(); ++i) {
+            degreeBudget[i] = interDegrees.get(i).getValue();
+            indices[i] = interDegrees.get(i).getKey();
+        }
+        if(id == 19) {
+            System.out.println();
+        }
         
         boolean finished = false;
         while(!finished) {
@@ -167,8 +214,10 @@ public class SuperNodeCluster implements SuperNode {
             for (int i = 0; i < degreeBudget.length; ++i) {
                 for (int j = i + 1; j < degreeBudget.length && degreeBudget[i] > 0; ++j) {
                     if (degreeBudget[j] > 0) {
-                        long node1 = children.get(i).sampleNode(random, offset + offsets[i]);
-                        long node2 = children.get(j).sampleNode(random, offset + offsets[j]);
+                        int index1 = indices[i];
+                        int index2 = indices[j];
+                        long node1 = children.get(index1).sampleNode(random, offset + offsets[index1]);
+                        long node2 = children.get(index2).sampleNode(random, offset + offsets[index2]);
                         writer.write(node1 + "\t" + node2 + "\n");
                         degreeBudget[i]--;
                         degreeBudget[j]--;
@@ -179,13 +228,13 @@ public class SuperNodeCluster implements SuperNode {
         }
         
     
-        int indices[] = new int[children.size()];
+        int indicesNonZero[] = new int[indices.length];
         int numNonZeros = 0;
         long remainingDegree = 0;
         for(int i = 0; i < degreeBudget.length; ++i)  {
             remainingDegree+=degreeBudget[i];
             if(degreeBudget[i] != 0L) {
-                indices[numNonZeros] = i;
+                indicesNonZero[numNonZeros] = indices[i];
                 numNonZeros++;
             }
         }
@@ -194,7 +243,7 @@ public class SuperNodeCluster implements SuperNode {
             double cumulative[] = new double[numNonZeros];
             cumulative[0] = 0.0;
             for (int i = 1; i < numNonZeros; ++i) {
-                double currentProb = degreeBudget[indices[i - 1]] / (double) remainingDegree;
+                double currentProb = degreeBudget[indicesNonZero[i - 1]] / (double) remainingDegree;
                 cumulative[i] = currentProb + cumulative[i - 1];
             }
     
@@ -209,7 +258,7 @@ public class SuperNodeCluster implements SuperNode {
                     pos--;
                 }
         
-                int first = indices[pos];
+                int first = indicesNonZero[pos];
         
                 pos = Arrays.binarySearch(cumulative, random.nextDouble());
         
@@ -218,7 +267,7 @@ public class SuperNodeCluster implements SuperNode {
                     pos--;
                 }
         
-                int second = indices[pos];
+                int second = indicesNonZero[pos];
         
                 long node1 = children.get(first).sampleNode(random, offset + offsets[first]);
                 long node2 = children.get(second).sampleNode(random, offset + offsets[second]);
