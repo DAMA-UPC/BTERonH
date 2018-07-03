@@ -6,9 +6,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
-public class SuperNodeCluster implements SuperNode {
+public class CommunityCluster implements SuperNode {
 
-    private long            id;
+    private int             id;
     private List<SuperNode> children;
     private long            offsets[] = null;
     private int             size = 0;
@@ -23,8 +23,8 @@ public class SuperNodeCluster implements SuperNode {
     
     private double          expectedRatio = 0.0;
 
-    public SuperNodeCluster(long id,
-                            List<SuperNode> children,
+    public CommunityCluster(int id,
+                            List<Community> children,
                             double externalRatio
                             ) {
         this.id = id;
@@ -164,7 +164,7 @@ public class SuperNodeCluster implements SuperNode {
     }
 
     @Override
-    public long getId() {
+    public int getId() {
         return id;
     }
 

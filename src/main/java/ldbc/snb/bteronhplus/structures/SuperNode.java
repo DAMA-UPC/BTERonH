@@ -11,7 +11,7 @@ public interface SuperNode {
 
     long getExternalDegree();
 
-    long getId();
+    int getId();
 
     void sampleEdges(FileWriter writer, Random random, long numEdges, long offset) throws IOException;
 

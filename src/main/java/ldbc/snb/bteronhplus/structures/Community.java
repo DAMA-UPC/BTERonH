@@ -48,7 +48,7 @@ public class Community implements SuperNode {
     }
     
     @Override
-    public long getId() {
+    public int getId() {
         return id;
     }
     
