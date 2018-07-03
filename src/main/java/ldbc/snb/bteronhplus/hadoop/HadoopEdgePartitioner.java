@@ -1,4 +1,4 @@
-package ldbc.snb.bteronh.hadoop;
+package ldbc.snb.bteronhplus.hadoop;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Partitioner;

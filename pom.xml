@@ -4,7 +4,7 @@
   http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>ldbc.snb</groupId>
-  <artifactId>bteronh</artifactId>
+  <artifactId>bteronhplus</artifactId>
   <version>0.0.3</version>
   <packaging>jar</packaging>
   <dependencies>
@@ -78,7 +78,12 @@
     <groupId>com.beust</groupId>
     <artifactId>jcommander</artifactId>
     <version>1.48</version>
-</dependency>
+    </dependency>
+    <dependency>
+      <groupId>org.jgrapht</groupId>
+      <artifactId>jgrapht-core</artifactId>
+      <version>1.1.0</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
