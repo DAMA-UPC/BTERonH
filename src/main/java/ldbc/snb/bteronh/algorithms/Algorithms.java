@@ -85,20 +85,24 @@ public class Algorithms {
         double [] cc = new double[maxDegree+1];
         cc[0] = 0.0;
         cc[1] = 0.0;
-        for(int i = 2; i < maxDegree+1; ++i) {
-            int degree = i;
-            int pos = Algorithms.BinarySearch(ccDistribution,(long)degree);
-            if(ccDistribution.get(pos).getKey() == degree || pos == (ccDistribution.size() - 1)) {
-                cc[degree] = ccDistribution.get(pos).getValue();
-            } else if( pos < ccDistribution.size() - 1 ){
-                long min = ccDistribution.get(pos).getKey();
-                long max = ccDistribution.get(pos+1).getKey();
-                double ratio = (degree - min) / (double)(max - min);
-                double minCC = ccDistribution.get(pos).getValue();
-                double maxCC = ccDistribution.get(pos+1).getValue();
-                double cc_current = ratio * (maxCC - minCC ) + minCC;
-                cc[degree] = cc_current;
+        try {
+            for (int i = 2; i < maxDegree + 1; ++i) {
+                int degree = i;
+                int pos = Algorithms.BinarySearch(ccDistribution, (long) degree);
+                if (ccDistribution.get(pos).getKey() == degree || pos == (ccDistribution.size() - 1)) {
+                    cc[degree] = ccDistribution.get(pos).getValue();
+                } else if (pos < ccDistribution.size() - 1) {
+                    long min = ccDistribution.get(pos).getKey();
+                    long max = ccDistribution.get(pos + 1).getKey();
+                    double ratio = (degree - min) / (double) (max - min);
+                    double minCC = ccDistribution.get(pos).getValue();
+                    double maxCC = ccDistribution.get(pos + 1).getValue();
+                    double cc_current = ratio * (maxCC - minCC) + minCC;
+                    cc[degree] = cc_current;
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return cc;
     }

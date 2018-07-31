@@ -4,10 +4,7 @@ import javafx.util.Pair;
 import ldbc.snb.bteronh.algorithms.Algorithms;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -55,6 +52,15 @@ public class BTERStats {
             }
         }
 
+        Collections.sort(observedCCPerDegree, new Comparator<Pair<Long,Double>>(){
+
+            @Override
+            public int compare(Pair<Long, Double> entry1, Pair<Long, Double> entry2) {
+                if(entry1.getKey() < entry2.getKey()) return -1;
+                if(entry1.getKey() == entry2.getKey()) return 0;
+                return 1;
+            }
+        } );
         double [] ccPerDegree = Algorithms.GenerateCCperDegree(observedCCPerDegree,maxDegree);
         initialize(numNodes, degrees,ccPerDegree);
     }
